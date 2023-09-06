@@ -1,4 +1,6 @@
-
+hello<-function(){
+  print("checking update!!")
+}
 
 read_gs_idx<-function(gs_sheet_id){
 
