@@ -141,9 +141,28 @@ update_kidx <- function(ref_date,sheet_num,idx_fn,start_date){
 
   prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx)),decreasing = T)]
 
+  top4_sub60_prices_run<-tail(prices_run_idx_sort[,1:4],n=60)
+  top4_sub60_idx <-tail(index(get(ksmb_lst[[1]][1],envir=ktickerData)),n=60)
+
+  top4_sub60_prices_run_nml=sweep(top4_sub60_prices_run*100,2,unlist(top4_sub60_prices_run[1,]),"/")
+
+  top_sub60_prices_run.df<-data.frame(date=top4_sub60_idx,top4_sub60_prices_run_nml)
+
+
+  top4_sub20_prices_run<-tail(prices_run_idx_sort[,1:4],n=20)
+  top4_sub20_idx <-tail(index(get(ksmb_lst[[1]][1],envir=ktickerData)),n=20)
+  top4_sub20_prices_run_nml=sweep(top4_sub20_prices_run*100,2,unlist(top4_sub20_prices_run[1,]),"/")
+
+  top_sub20_prices_run.df<-data.frame(date=top4_sub20_idx,top4_sub20_prices_run_nml)
+
+
   sector_rank <- order(colSums(tail(prices_run_idx)),decreasing = T)
 
+
+
   prices_run.xts <-xts(prices_run_idx_sort,index(get(ksmb_lst[[1]][1],envir=ktickerData)))[paste0(ref_date,'::')]
+
+
   #colnames(prices_run.xts)<- names(ksmb_lst)
   prices_run.df<-data.frame(date=index(prices_run.xts),coredata(prices_run.xts))
 
@@ -151,6 +170,15 @@ update_kidx <- function(ref_date,sheet_num,idx_fn,start_date){
   ssid <- "1Edz1EPV6hqBM2tMKSkA3zNmysmugMrAg1u2H3fheXaM"
   range_clear(ssid,sheet=sheet_num)
   range_write(ssid,prices_run.df,range="A1",col_names = TRUE,sheet = sheet_num)
+
+  if(sheet_num==kidx-Q){
+    range_write(ssid,top_sub60_prices_run.df,range="Q1",col_names = TRUE,sheet = sheet_num)
+
+  }else {
+    range_write(ssid,top_sub20_prices_run.df,range="Q1",col_names = TRUE,sheet = sheet_num)
+  }
+
+  
   return(sector_rank)
 
 }
@@ -419,7 +447,6 @@ update_vmon<-function(today_str){
 
   #input volmon
   volmon_xts_lst<-lapply(as.list(time_unq),function(x) { mapply(function(X,Y){dt<-ifelse(Y<1000,paste0(today_str,' 0',Y),paste0(today_str,' ',Y));
-
   dt<-as.POSIXct(dt,format="%Y-%m-%d %H%M");
   x_xts<-xts(X[,c('open','high','low','close','volume')],dt);
   tgt_dut<-get(X[,2],envir=vmonenv);
