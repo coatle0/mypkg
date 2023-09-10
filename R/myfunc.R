@@ -134,7 +134,7 @@ update_kidx <- function(ref_date,sheet_num,idx_fn,start_date){
   ref_prices=lapply(ksmb_lst,function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir=ktickerData)[ref_date])))))
   ref_pf = mapply(function(X,Y){X/Y}, X=kweight_lst,Y=ref_prices,SIMPLIFY=F)
 
-  prices_run=lapply(ksmb_lst, function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir = ktickerData))))))
+  prices_run=lapply(ksmb_lst, function(x) do.call(cbind,lapply(x,function(x){print(x); coredata(Cl(get(x,envir = ktickerData)))})))
   prices_run_idx = mapply(function(X,Y){X %*% as.numeric(Y)},X=prices_run,Y=ref_pf)
 
   prices_run_idx[,grepl('spd',colnames(prices_run_idx),fixed=T)]<-prices_run_idx[,grepl('spd',colnames(prices_run_idx),fixed=T)]+100
@@ -171,14 +171,13 @@ update_kidx <- function(ref_date,sheet_num,idx_fn,start_date){
   range_clear(ssid,sheet=sheet_num)
   range_write(ssid,prices_run.df,range="A1",col_names = TRUE,sheet = sheet_num)
 
-  if(sheet_num==kidx-Q){
+  if(sheet_num== 'kidx-Q'){
     range_write(ssid,top_sub60_prices_run.df,range="Q1",col_names = TRUE,sheet = sheet_num)
 
   }else {
     range_write(ssid,top_sub20_prices_run.df,range="Q1",col_names = TRUE,sheet = sheet_num)
   }
 
-  
   return(sector_rank)
 
 }
