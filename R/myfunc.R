@@ -525,9 +525,9 @@ volmon_idx_sep <- function(){
   sep_idx_nvol_df <- coredata(sep_ind_nvol_lst_mer)
 
   #special jm name to compensate
-  special_jm <- c('JYP','PLUS','KG')
+  #special_jm <- c('JYP','PLUS','KG')
   pfsmb_ary<-unlist(pfsmb_lst)
-  pfsmb_ary<-c(pfsmb_ary,special_jm)
+  #pfsmb_ary<-c(pfsmb_ary,special_jm)
   pf_pattern<-paste(pfsmb_ary,collapse = '|')
   pf_df<-sep_idx_nvol_df[,grep(pf_pattern,colnames(sep_idx_nvol_df))]
   pf_df1 <- data.frame(time=as.character(index(sep_ind_nvol_lst_mer)),pf_df)
