@@ -496,7 +496,7 @@ prices_idx_cal<- function(){
 
 vol_nor_idx_cal<-function(){
   vol_run_ft<-lapply(ksmb_lst,function(x){temp<-rowSums(do.call(merge,lapply(x,
-                                                                             function(y){(get(y,envir=nor_vol_env))})));
+                                                                             function(y){(get(y,envir=nor_vol_env))})))/length(x);
   xts(temp,index(get(ksmb_lst[[1]][1],envir=nor_vol_env)))
 
   }
