@@ -449,6 +449,7 @@ update_vmon<-function(today_str){
   dt<-as.POSIXct(dt,format="%Y-%m-%d %H%M");
   x_xts<-xts(X[,c('open','high','low','close','volume')],dt);
   tgt_dut<-get(X[,2],envir=vmonenv);
+  if(tgt_dut$close[1]==0){tgt_dut$close[1] = x_xts$open}
   x_xts_up<-rbind(tgt_dut[!(index(tgt_dut) %in% index(x_xts))],x_xts);
   assign(X[,2],x_xts_up,envir=vmonenv)
   temp<-Y
