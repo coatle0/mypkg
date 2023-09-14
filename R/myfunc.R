@@ -1,3 +1,4 @@
+
 hello<-function(){
   print("checking update!!")
 }
@@ -480,7 +481,7 @@ volmon_vol_diff <- function(){lapply(volmon$code_name,function(x){
 
 prices_idx_cal<- function(){
   ref_prices=lapply(ksmb_lst,function(x) do.call(cbind,lapply(
-    x,function(x) coredata(Op(get(x,envir=vmonenv)[2]))))%>%`colnames<-`(x))
+    x,function(x) coredata(Cl(get(x,envir=vmonenv)[1]))))%>%`colnames<-`(x))
 
   prices_run_ft<-lapply(ksmb_lst,function(x){do.call(merge,lapply(x,
                                                                   function(y){Cl(get(y,envir=diff_env))}))}%>%`colnames<-`(x))
