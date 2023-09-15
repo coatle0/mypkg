@@ -450,7 +450,7 @@ update_vmon<-function(today_str){
   dt<-as.POSIXct(dt,format="%Y-%m-%d %H%M");
   x_xts<-xts(X[,c('open','high','low','close','volume')],dt);
   tgt_dut<-get(X[,2],envir=vmonenv);
-  if(tgt_dut$close[1]==0){tgt_dut$close[1] = x_xts$open}
+  if(tgt_dut$open[1]==0){tgt_dut$open[1] = x_xts$open;tgt_dut$close[1] = x_xts$open}
   x_xts_up<-rbind(tgt_dut[!(index(tgt_dut) %in% index(x_xts))],x_xts);
   assign(X[,2],x_xts_up,envir=vmonenv)
   temp<-Y
@@ -481,12 +481,13 @@ volmon_vol_diff <- function(){lapply(volmon$code_name,function(x){
 
 prices_idx_cal<- function(){
   ref_prices=lapply(ksmb_lst,function(x) do.call(cbind,lapply(
-    x,function(x) coredata(Cl(get(x,envir=vmonenv)[1]))))%>%`colnames<-`(x))
+    x,function(x) coredata(Op(get(x,envir=vmonenv)[1]))))%>%`colnames<-`(x))
 
   prices_run_ft<-lapply(ksmb_lst,function(x){do.call(merge,lapply(x,
                                                                   function(y){Cl(get(y,envir=diff_env))}))}%>%`colnames<-`(x))
 
   ref_pf = mapply(function(X,Y){X/Y}, X=kweight_lst,Y=ref_prices,SIMPLIFY = FALSE)
+
 
   prices_run.idx = mapply(function(X,Y){X %*% as.numeric(Y)},X=prices_run_ft,
                           Y=ref_pf,SIMPLIFY = FALSE)
@@ -520,7 +521,7 @@ volmon_idx_sep <- function(){
 
   sep_idx_nvol_lst <- mapply(function(X,Y){ merge(X,Y) },X=prices_run.nor,Y=vol_nor_lst,SIMPLIFY = FALSE)
 
-  sep_idx_nvol_lst<-sep_idx_nvol_lst[order(sapply(sep_idx_nvol_lst,function(x){chk_strong<-sum(x[,2]);print(chk_strong);return(chk_strong)}),decreasing=TRUE)]
+  sep_idx_nvol_lst<-sep_idx_nvol_lst[order(sapply(sep_idx_nvol_lst,function(x){chk_strong<-sum(x[,1]);print(chk_strong);return(chk_strong)}),decreasing=TRUE)]
   sep_ind_nvol_lst_mer <- do.call(merge,sep_idx_nvol_lst)
 
   sep_idx_nvol_df <- coredata(sep_ind_nvol_lst_mer)
@@ -576,7 +577,7 @@ prices_vol_nor_idx_cal<-function(){
       `colnames<-`(paste0(Z,c('idx','vol')))} ,
       X=volmon_idx,Y=vol_nor_idx,Z=names(ksmb_lst),SIMPLIFY = FALSE)
 
-  idx_all<-idx_all[order(sapply(idx_all,function(x) sum(tail(x[,2]))),decreasing=TRUE)]
+  idx_all<-idx_all[order(sapply(idx_all,function(x) sum(tail(x[,1]))),decreasing=TRUE)]
   idx_all.xts <- do.call(merge,idx_all)
   idx_all.df <- data.frame(time=as.character(index(idx_all.xts)),coredata(idx_all.xts))
 
