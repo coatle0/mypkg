@@ -519,9 +519,12 @@ volmon_idx_sep <- function(){
 
   vol_nor_lst <-lapply(jm_lst,function(x) get(x,envir=nor_vol_env) %>%`colnames<-`(paste0(x,'_nvol')))
 
-  sep_idx_nvol_lst <- mapply(function(X,Y){ merge(X,Y) },X=prices_run.nor,Y=vol_nor_lst,SIMPLIFY = FALSE)
+  sep_idx_nvol_lst <- mapply(function(X,Y,Z){ merge(X,Y) %>% `colnames<-`(c(paste0(Z,'_idx'),paste0(Z,'_nvol'))) },X=prices_run.nor,Y=vol_nor_lst,Z=jm_lst,SIMPLIFY = FALSE)
 
-  sep_idx_nvol_lst<-sep_idx_nvol_lst[order(sapply(sep_idx_nvol_lst,function(x){chk_strong<-sum(x[,1]);print(chk_strong);return(chk_strong)}),decreasing=TRUE)]
+  names(sep_idx_nvol_lst) <- jm_lst
+
+
+  #sep_idx_nvol_lst<-sep_idx_nvol_lst[order(sapply(sep_idx_nvol_lst,function(x){chk_strong<-sum(x[,1]);print(chk_strong);return(chk_strong)}),decreasing=TRUE)]
   sep_ind_nvol_lst_mer <- do.call(merge,sep_idx_nvol_lst)
 
   sep_idx_nvol_df <- coredata(sep_ind_nvol_lst_mer)
@@ -556,19 +559,25 @@ volmon_idx_sep <- function(){
   range_clear(ssid,sheet='tm_rt_focus')
   range_write(ssid,fs_df1,range="A1",col_names = TRUE,sheet = "tm_rt_focus")
 
+  ksmb_lst_ary<-unlist(ksmb_lst_sort[1:4])
 
-  idx_all_df1 <- data.frame(time=as.character(index(sep_ind_nvol_lst_mer)),sep_idx_nvol_df2[,1:30])
-  idx_all_df2 <- data.frame(time=as.character(index(sep_ind_nvol_lst_mer)),sep_idx_nvol_df2[,31:dim(sep_idx_nvol_df2)[2]])
+  sep_top4_idx_nvol_lst <- sep_idx_nvol_lst[ksmb_lst_ary]
+  sep_top4_idx_nvol_mer <- do.call(merge,sep_top4_idx_nvol_lst)
+
+  sep_top4_idx_nvol_df <- coredata(sep_top4_idx_nvol_mer)
+
+  idx_all_df1 <- data.frame(time=as.character(index(sep_top4_idx_nvol_mer)),sep_top4_idx_nvol_df)
+  #idx_all_df2 <- data.frame(time=as.character(index(sep_ind_nvol_lst_mer)),sep_idx_nvol_df2[,31:dim(sep_idx_nvol_df2)[2]])
 
   gs4_auth(email = "coatle0@gmail.com")
   ssid<- "1GWW0Q1RgMNAvSG7S4OyrbXSpcSHDnMSmd2uTsmZyJJE"
   range_clear(ssid,sheet='tm_rt_sep1')
   range_write(ssid,idx_all_df1,range="A1",col_names = TRUE,sheet = "tm_rt_sep1")
 
-  gs4_auth(email = "coatle0@gmail.com")
-  ssid<- "1GWW0Q1RgMNAvSG7S4OyrbXSpcSHDnMSmd2uTsmZyJJE"
-  range_clear(ssid,sheet='tm_rt_sep2')
-  range_write(ssid,idx_all_df2,range="A1",col_names = TRUE,sheet = "tm_rt_sep2")
+  #gs4_auth(email = "coatle0@gmail.com")
+  #ssid<- "1GWW0Q1RgMNAvSG7S4OyrbXSpcSHDnMSmd2uTsmZyJJE"
+  #range_clear(ssid,sheet='tm_rt_sep2')
+  #range_write(ssid,idx_all_df2,range="A1",col_names = TRUE,sheet = "tm_rt_sep2")
 }
 
 
@@ -576,8 +585,10 @@ prices_vol_nor_idx_cal<-function(){
   idx_all <-mapply(function(X,Y,Z){ merge(X,Y) %>%
       `colnames<-`(paste0(Z,c('idx','vol')))} ,
       X=volmon_idx,Y=vol_nor_idx,Z=names(ksmb_lst),SIMPLIFY = FALSE)
+  idx_sort <- order(sapply(idx_all,function(x) sum(tail(x[,1]))),decreasing=TRUE)
+  idx_all<-idx_all[idx_sort]
+  ksmb_lst_sort<-ksmb_lst[idx_sort]
 
-  idx_all<-idx_all[order(sapply(idx_all,function(x) sum(tail(x[,1]))),decreasing=TRUE)]
   idx_all.xts <- do.call(merge,idx_all)
   idx_all.df <- data.frame(time=as.character(index(idx_all.xts)),coredata(idx_all.xts))
 
