@@ -598,6 +598,8 @@ prices_vol_nor_idx_cal<-function(){
   ssid<- "1GWW0Q1RgMNAvSG7S4OyrbXSpcSHDnMSmd2uTsmZyJJE"
   range_clear(ssid,sheet='tm_rt')
   range_write(ssid,idx_all.df,range="A1",col_names = TRUE,sheet = "tm_rt")
+
+  return(ksmb_lst_sort)
 }
 
 
