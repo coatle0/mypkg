@@ -361,7 +361,7 @@ update_usep <- function(ref_date,sheet_num,idx_fn,sector_rank){
 
   gs4_auth(email = "coatle0@gmail.com")
   ssid <- "1Edz1EPV6hqBM2tMKSkA3zNmysmugMrAg1u2H3fheXaM"
-  range_clear(ssid,sheet=Uindex_sep2)
+  range_clear(ssid,sheet='Uindex_sep2')
   range_write(ssid,prices_run.df2,range="A1",col_names = TRUE,sheet=sheet_num+1)
 }
 
