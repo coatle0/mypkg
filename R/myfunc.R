@@ -371,7 +371,7 @@ update_myuidx<-function(qtr_ref_date,week_ref_date,idx_fn){
   #quarterly update
   sector_rank<-update_uidx(qtr_ref_date,"Uindex-Q",idx_fn)
   sector_rank<-update_uidx(week_ref_date,"Uindex-W",idx_fn)
-  update_usep(week_ref_date,"Uindex-sep1",idx_fn,sector_rank)
+  update_usep(week_ref_date,"Uindex_sep1",idx_fn,sector_rank)
 }
 
 
