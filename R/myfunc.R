@@ -211,8 +211,14 @@ update_ksep <- function(ref_date,sheet_num,idx_fn,start_date){
   prices_run.xts <-lapply(prices_run_normal,function(x){xts(x,index(get(ksmb_lst[[1]][1],envir=ktickerData)))[paste0(ref_date,'::')]})
   names(prices_run.xts) <- c()
 
+  prices_run.mrg<-do.call(merge,prices_run.xts)
+  prices_run.top8 <-prices_run.mer[,order(colSums(tail(prices_run.mrg)),decreasing = T)[1:8]]
 
-  prices_run.df<-do.call(cbind,lapply(prices_run.xts,function(x){data.frame(date=index(x),coredata(x))}))
+
+  #prices_run.df<-do.call(cbind,lapply(prices_run.xts,function(x){data.frame(date=index(x),coredata(x))}))
+  prices_run.df<-data.frame(date=index(prices_run.mrg),coredata(prices_run.top8),coredata(prices_run.mrg))
+
+
 
   gs4_auth(email = "coatle0@gmail.com")
   ssid <- "1Edz1EPV6hqBM2tMKSkA3zNmysmugMrAg1u2H3fheXaM"
@@ -331,6 +337,7 @@ update_usep <- function(ref_date,sheet_num,idx_fn,sector_rank){
   #adopt sector ranking
   weight_lst <- weight_lst[sector_rank]
   smb_lst <- smb_lst[sector_rank]
+  nsmb_top5 <- sum(sapply(smb_lst[1:5],length))
 
   db_xts<-lapply(smb_lst,function(x) getSymbols(x[!(x %in% ls(envir=tickerData))],src='yahoo',env=tickerData,from=ref_date))
 
@@ -347,8 +354,11 @@ update_usep <- function(ref_date,sheet_num,idx_fn,sector_rank){
   names(prices_run.xts)<- c()
 
   prices_run.df<-do.call(merge,prices_run.xts)
-  prices_run.df1<-data.frame(date=index(prices_run.df),coredata(prices_run.df[,1:30]))
-  prices_run.df2<-data.frame(date=index(prices_run.df),coredata(prices_run.df[,31:dim(prices_run.df)[2]]))
+
+  prices_run.top8 <-prices_run.df[,order(colSums(tail(prices_run.df)),decreasing = T)[1:8]]
+
+  prices_run.df1<-data.frame(date=index(prices_run.df),coredata(prices_run.top8),coredata(prices_run.df[,1:nsmb_top5]))
+  prices_run.df2<-data.frame(date=index(prices_run.df),coredata(prices_run.df[,(nsmb_top5+1):dim(prices_run.df)[2]]))
 
 
 
