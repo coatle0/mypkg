@@ -212,7 +212,7 @@ update_ksep <- function(ref_date,sheet_num,idx_fn,start_date){
   names(prices_run.xts) <- c()
 
   prices_run.mrg<-do.call(merge,prices_run.xts)
-  prices_run.top8 <-prices_run.mer[,order(colSums(tail(prices_run.mrg)),decreasing = T)[1:8]]
+  prices_run.top8 <-prices_run.mrg[,order(colSums(tail(prices_run.mrg)),decreasing = T)[1:8]]
 
 
   #prices_run.df<-do.call(cbind,lapply(prices_run.xts,function(x){data.frame(date=index(x),coredata(x))}))
