@@ -1,3 +1,84 @@
+library(rvest)
+library(httr)
+library(readr)
+library(tibble)
+
+
+#function for jm_code get
+code_get<-function(){
+  gen_otp_url =
+    'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd'
+  
+  down_url = 'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd'
+  url_jmcode = 'dbms/MDC/STAT/standard/MDCSTAT01901'
+  
+  otp_jm = list(
+    mktId = 'ALL',
+    share ='1',
+    csvxls_isNo = 'false',
+    name = 'fileDown',
+    url = url_jmcode
+  )
+  otp = POST(gen_otp_url, query = otp_jm) %>%
+    read_html() %>%
+    html_text()
+  
+  jm_code = POST(down_url, query = list(code = otp),
+                 add_headers(referer = gen_otp_url)) %>%
+    read_html(encoding = 'EUC-KR') %>%
+    html_text() %>%
+    read_csv(show_col_types = FALSE)
+    colnames(jm_code)<-c('code','scode','fname','name','ename','ipodate','market','stype','class','stype','unitp','issue')
+    jm_code <- cbind(jm_code$market, jm_code$name, jm_code$code,jm_code$scode)
+    colnames(jm_code)<-c('market','name','code','scode')
+  return(as_tibble(jm_code))
+}
+
+tqk_get <- function(x,
+                    from) {
+  gen_otp_url =
+    'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd'
+  
+  down_url = 'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd'
+  url_jmcode = 'dbms/MDC/STAT/standard/MDCSTAT01901'
+
+  
+  url_ohlc = 'dbms/MDC/STAT/standard/MDCSTAT01701' 
+  
+  otp_ohlc = list(
+    #tboxisuCd_finder_stkisu0_3 = '005930/�Ｚ����',
+    isuCd=x,
+    #isuCd2 = 'KR7005930003',
+    #codeNmisuCd_finder_stkisu0_3: �Ｚ����
+    #param1isuCd_finder_stkisu0_3: ALL
+    strtDd=gsub('-','',from),
+    endDd=format(Sys.Date(),'%Y%m%d'),
+    adjStkPrc_check='Y',
+    adjStkPrc='2',
+    share= '1',
+    money= '1',
+    csvxls_isNo='false',
+    name='fileDown',
+    url= url_ohlc
+  )
+  otp = POST(gen_otp_url, query = otp_ohlc) %>%
+    read_html() %>%
+    html_text()
+  
+  
+  x_ohlc = POST(down_url, query = list(code = otp),
+                 add_headers(referer = gen_otp_url)) %>%
+    read_html(encoding = 'EUC-KR') %>%
+    html_text() %>%
+    read_csv(show_col_types = FALSE)
+  
+  colnames(x_ohlc)<-c('date','close','chg','chgr','open','high','low','volume','volm','mcap','issue')
+  #x_ohlc_tmp <- cbind(x_ohlc$open,x_ohlc$high,x_ohlc$low,x_ohlc$close,x_ohlc$volume,x_ohlc$chgr)
+  #colnames(x_ohlc_tmp)<-c('open','high','low','close','volume','chgr')
+  
+  return(as_tibble(x_ohlc[,c('date','open','high','low','close','volume','chgr')]))
+}
+
 
 hello<-function(){
   print("checking update!!")
