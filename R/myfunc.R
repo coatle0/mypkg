@@ -75,8 +75,20 @@ tqk_get <- function(x,
   colnames(x_ohlc)<-c('date','close','chg','chgr','open','high','low','volume','volm','mcap','issue')
   #x_ohlc_tmp <- cbind(x_ohlc$open,x_ohlc$high,x_ohlc$low,x_ohlc$close,x_ohlc$volume,x_ohlc$chgr)
   #colnames(x_ohlc_tmp)<-c('open','high','low','close','volume','chgr')
+  pcl<-x_ohlc$close[-1]
+  df_len<-length(x_ohlc$close)
+  chigh<-x_ohlc$high[-df_len]
+  clow <- x_ohlc$low[-df_len]
+
+  pswing <- (chigh-pcl)/pcl
+  pswing <- as.numeric(format(pswing * 100,digits=1))
+  x_ohlc$pswing <- c(pswing,0)
+
+  nswing <- (clow-pcl)/pcl
+  nswing <- as.numeric(format(nswing * 100,digits=1))
+  x_ohlc$nswing <- c(nswing,0)
   
-  return(as_tibble(x_ohlc[,c('date','open','high','low','close','volume','chgr')]))
+  return(as_tibble(x_ohlc[,c('date','open','high','low','close','volume','chgr','pswing','nswing')]))
 }
 
 
