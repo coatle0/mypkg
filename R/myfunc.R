@@ -92,7 +92,7 @@ tqk_get <- function(x,
 }
 
 code<-code_get()
-vline<-0
+#vline<-0
 vvol_wk <- function(jm,year,sigmulti){
   date_start <- Sys.Date()
   date_start <- date_start-year*365
@@ -105,7 +105,7 @@ vvol_wk <- function(jm,year,sigmulti){
   vvol <- avg + sigma*sigmulti
   
   vvol_evt<-index(ohlc_w_xts$Volume[ohlc_w_xts$Volume > vvol])
-  vline<<-which(index(ohlc_w_xts) %in% vvol_evt)
+  vline <-which(index(ohlc_w_xts) %in% vvol_evt)
   print(vvol_evt)
   png(filename='test.png')
   chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(5,col='red');addEMA(20,col='green');addEMA(40,col='cyan');addLines(v=vline,on=1,col='yellow')")
