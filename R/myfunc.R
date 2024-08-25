@@ -91,6 +91,33 @@ tqk_get <- function(x,
   return(as_tibble(x_ohlc[,c('date','open','high','low','close','volume','chgr','pswing','nswing')]))
 }
 
+code<-code_get()
+vline<-0
+vvol_wk <- function(jm,year,sigmulti){
+  date_start <- Sys.Date()
+  date_start <- date_start-year*365
+  ohlc_df<- tqk_get(code %>% filter(name== jm) %>% pull('code')->tgt_code,date_start)
+  
+  ohlc_xts <- xts(ohlc_df[,2:7],ohlc_df$date)
+  ohlc_w_xts <- to.weekly(ohlc_xts,name = NULL)
+  avg<-mean(ohlc_w_xts$Volume)
+  sigma <- sd(ohlc_w_xts$Volume)
+  vvol <- avg + sigma*sigmulti
+  
+  vvol_evt<-index(ohlc_w_xts$Volume[ohlc_w_xts$Volume > vvol])
+  vline<<-which(index(ohlc_w_xts) %in% vvol_evt)
+  print(vvol_evt)
+  png(filename='test.png')
+  chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(5,col='red');addEMA(20,col='green');addEMA(40,col='cyan');addLines(v=vline,on=1,col='yellow')")
+  dev.off()
+  chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(5,col='red');addEMA(20,col='green');addEMA(40,col='cyan');addLines(v=vline,on=1,col='yellow')")
+  bot$sendPhoto(chat_id,'test.png')
+  url_tv <- paste0("https://www.tradingview.com/chart/9ZHcOzZN/?symbol=KRX%3A",code %>% filter(name== jm) %>% pull('scode'))
+  bot$sendMessage(chat_id = chat_id, text =url_tv)
+  
+}
+
+
 
 hello<-function(){
   print("checking update!!")
