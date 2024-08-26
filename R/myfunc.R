@@ -112,6 +112,7 @@ vvol_wk <- function(jm,year,sigmulti){
   vline <-which(index(ohlc_w_xts) %in% vvol_evt)
   print(vvol_evt)
   png(filename='test.png')
+  print(vline)
   chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(5,col='red');addEMA(20,col='green');addEMA(40,col='cyan');addLines(v=vline,on=1,col='yellow')")
   dev.off()
   chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(5,col='red');addEMA(20,col='green');addEMA(40,col='cyan');addLines(v=vline,on=1,col='yellow')")
