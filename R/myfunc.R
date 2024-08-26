@@ -2,7 +2,11 @@ library(rvest)
 library(httr)
 library(readr)
 library(tibble)
+library(telegram.bot)
 
+
+bot=Bot(token="5824250303:AAF30nE1zYlP28DzS-Gd69yAegN-LgHU_ag")
+chat_id <- 1278251780
 
 #function for jm_code get
 code_get<-function(){
@@ -92,7 +96,7 @@ tqk_get <- function(x,
 }
 
 code<-code_get()
-#vline<-0
+vline<-0
 vvol_wk <- function(jm,year,sigmulti){
   date_start <- Sys.Date()
   date_start <- date_start-year*365
