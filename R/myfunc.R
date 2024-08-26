@@ -96,7 +96,7 @@ tqk_get <- function(x,
 }
 
 code<-code_get()
-vline<-0
+#vline<-0
 vvol_wk <- function(jm,year,sigmulti){
   date_start <- Sys.Date()
   date_start <- date_start-year*365
