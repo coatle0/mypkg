@@ -97,7 +97,7 @@ tqk_get <- function(x,
 
 code<-code_get()
 #vline<-0
-vvol_wk <- function(jm,year,sigmulti){
+vvol_wk <- function(jm,year=1,sigmulti=1.8){
   date_start <- Sys.Date()
   date_start <- date_start-year*365
   ohlc_df<- tqk_get(code %>% filter(name== jm) %>% pull('code')->tgt_code,date_start)
@@ -113,16 +113,16 @@ vvol_wk <- function(jm,year,sigmulti){
   assign('vline',vline,envir=.GlobalEnv)
   print(vvol_evt)
   png(filename='test.png')
-  chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(5,col='red');addEMA(20,col='green');addEMA(40,col='cyan');addLines(v=vline,on=1,col='yellow')")
+  chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(4,col='red');addEMA(12,col='green');addLines(v=vline,on=1,col='yellow')")
   dev.off()
-  chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(5,col='red');addEMA(20,col='green');addEMA(40,col='cyan');addLines(v=vline,on=1,col='yellow')")
+  chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(4,col='red');addEMA(12,col='green');addLines(v=vline,on=1,col='yellow')")
   bot$sendPhoto(chat_id,'test.png')
   url_tv <- paste0("https://www.tradingview.com/chart/9ZHcOzZN/?symbol=KRX%3A",code %>% filter(name== jm) %>% pull('scode'))
   bot$sendMessage(chat_id = chat_id, text =url_tv)
   
 }
 
-vvol_wu <- function(jm,year,sigmulti){
+vvol_wu <- function(jm,year=1,sigmulti=1.8){
   date_start <- Sys.Date()
   date_start <- date_start-year*365
   
@@ -139,9 +139,9 @@ vvol_wu <- function(jm,year,sigmulti){
   assign('vline',vline,envir=.GlobalEnv)
   print(vvol_evt)
   png(filename='test.png')
-  chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(5,col='red');addEMA(20,col='green');addEMA(40,col='cyan');addLines(v=vline,on=1,col='yellow')")
+  chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(4,col='red');addEMA(12,col='green');addLines(v=vline,on=1,col='yellow')")
   dev.off()
-  chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(5,col='red');addEMA(20,col='green');addEMA(40,col='cyan');addLines(v=vline,on=1,col='yellow')")
+  chartSeries(ohlc_w_xts,name=jm,TA="addVo();addEMA(4,col='red');addEMA(12,col='green');addLines(v=vline,on=1,col='yellow')")
   bot$sendPhoto(chat_id,'test.png')
   url_tv <- paste0("https://www.tradingview.com/chart/9ZHcOzZN/?symbol=",jm)
   bot$sendMessage(chat_id = chat_id, text =url_tv)
