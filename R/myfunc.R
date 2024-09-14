@@ -499,15 +499,16 @@ update_usep <- function(ref_date,sheet_num,idx_fn,sector_rank){
   print("competed xts")
   prices_run_idx = mapply(function(X,Y,Z){ as.data.frame(sweep(X,2,Y,FUN="/")*100) %>% set_names(Z)},X=prices_run,Y=ref_prices,Z=smb_lst)
   print('matrix X vector ')
-  prices_run.xts <-lapply(prices_run_idx,function(x){xts(x,index(get(smb_lst[[1]][1],envir=tickerData)))[paste0(ref_date,'::')]})
+  prices_run_idx_sort <-lapply(prices_run_idx, function(x) x[,order(colSums(tail(x)),decreasing=T)[1:3]])
+  prices_run.xts <-lapply(prices_run_idx_sort,function(x){xts(x,index(get(smb_lst[[1]][1],envir=tickerData)))[paste0(ref_date,'::')]})
   names(prices_run.xts)<- c()
 
   prices_run.df<-do.call(merge,prices_run.xts)
 
-  prices_run.top8 <-prices_run.df[,order(colSums(tail(prices_run.df)),decreasing = T)[1:8]]
+  #prices_run.top8 <-prices_run.df[,order(colSums(tail(prices_run.df)),decreasing = T)[1:8]]
 
-  prices_run.df1<-data.frame(date=index(prices_run.df),coredata(prices_run.top8),coredata(prices_run.df[,1:nsmb_top5]))
-  prices_run.df2<-data.frame(date=index(prices_run.df),coredata(prices_run.df[,(nsmb_top5+1):dim(prices_run.df)[2]]))
+  prices_run.df1<-data.frame(date=index(prices_run.df),coredata(prices_run.df[,1:15]))
+  prices_run.df2<-data.frame(date=index(prices_run.df),coredata(prices_run.df[,16:dim(prices_run.df)[2]]))
 
 
 
