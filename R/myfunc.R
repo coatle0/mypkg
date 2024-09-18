@@ -268,7 +268,6 @@ ksky_lfcy <- function(ref_date,idx_fn){
   sheet_num <- 'sky_lfcy_viz'
   sheet_num_sep <- 'sky_lfcy_viz_sep'
   sheet_num_sep2 <- 'sky_lfcy_viz_sep2'
-  idx_fn <- 'sky_lfcy'
   start_date <- ref_date
   
   
