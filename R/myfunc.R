@@ -423,12 +423,16 @@ update_kidx <- function(ref_date,sheet_num,idx_fn,start_date){
 }
 
 
-update_ksep <- function(ref_date,sheet_num,idx_fn,start_date){
+update_ksep <- function(ref_date,sheet_num,idx_fn,start_date,sector_rank){
   idx_gs_lst <- read_gs_idx(idx_fn)
   kweight_lst<-idx_gs_lst[[2]]
 
   ksmb_lst<-idx_gs_lst[[1]]
 
+  #adopt sector ranking
+  kweight_lst<-kweight_lst[sector_rank]
+
+  ksmb_lst<-ksmb_lst[sector_rank]
 
   kidx_xts<-lapply(ksmb_lst,function(y){print(y);lapply(y,function(x){ ifelse(!exists(x,envir=ktickerData),
                                                                               {tqk_code<-code[match(x,code$name),3]$code;yahoo_code<-paste0(tqk_code,".KQ");
@@ -445,17 +449,17 @@ update_ksep <- function(ref_date,sheet_num,idx_fn,start_date){
 
   prices_run=lapply(ksmb_lst, function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir = ktickerData))))))
   prices_run_normal = mapply(function(X,Y,Z){as.data.frame(sweep(X,2,Y,FUN="/")*100) %>% set_names(Z)},X=prices_run,Y=ref_prices,Z=ksmb_lst)
-  #
-
-  prices_run.xts <-lapply(prices_run_normal,function(x){xts(x,index(get(ksmb_lst[[1]][1],envir=ktickerData)))[paste0(ref_date,'::')]})
+  # get top 3 performer
+  prices_run_idx_sort <-lapply(prices_run_normal, function(x) x[,order(colSums(tail(x)),decreasing=T)[1:3]])
+  prices_run.xts <-lapply(prices_run_idx_sort,function(x){xts(x,index(get(ksmb_lst[[1]][1],envir=ktickerData)))[paste0(ref_date,'::')]})
   names(prices_run.xts) <- c()
 
   prices_run.mrg<-do.call(merge,prices_run.xts)
-  prices_run.top8 <-prices_run.mrg[,order(colSums(tail(prices_run.mrg)),decreasing = T)[1:8]]
+  #prices_run.top8 <-prices_run.mrg[,order(colSums(tail(prices_run.mrg)),decreasing = T)[1:8]]
 
 
   #prices_run.df<-do.call(cbind,lapply(prices_run.xts,function(x){data.frame(date=index(x),coredata(x))}))
-  prices_run.df<-data.frame(date=index(prices_run.mrg),coredata(prices_run.top8),coredata(prices_run.mrg))
+  prices_run.df<-data.frame(date=index(prices_run.mrg),coredata(prices_run.mrg))
 
 
 
