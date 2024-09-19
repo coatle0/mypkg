@@ -481,28 +481,35 @@ update_myidx <- function(kidx_start,data_start,qtr_start,week_start){
   ref_date = week_start
   start_date = data_start
   idx_fn = "kr_idx"
-  update_kidx(ref_date,sheet_num,idx_fn,data_start)
+  sector_rank<-update_kidx(ref_date,sheet_num,idx_fn,data_start)
+
+    #update auto parts weekly
+  sheet_num = 'sub_sector'
+  start_date <- data_start
+  ref_date = week_start
+  idx_fn = "kr_idx"
+  update_ksep(ref_date,sheet_num,idx_fn,data_start,sector_rank)
 
   #update lib quarterly idx
   sheet_num = 'lib_idx'
   start_date <- data_start
   ref_date = week_start
   idx_fn = "lib_sub_idx"
-  update_kidx(ref_date,sheet_num,idx_fn,data_start)
+  sector_rank<-update_kidx(ref_date,sheet_num,idx_fn,data_start)
 
   #update lib sep chart quarter
   sheet_num = 'lib_sep_w'
   start_date <- data_start
   ref_date = week_start
   idx_fn = "lib_sub_idx"
-  update_ksep(ref_date,sheet_num,idx_fn,data_start)
+  update_ksep(ref_date,sheet_num,idx_fn,data_start,sector_rank)
 
   #update semi quarterly idx
   sheet_num = 'semi_idx'
   start_date <- data_start
   ref_date = week_start
   idx_fn = "semi_sub_idx"
-  update_kidx(ref_date,sheet_num,idx_fn,data_start)
+  sector_rank<-update_kidx(ref_date,sheet_num,idx_fn,data_start)
 
 
   #update semi sep weekly
@@ -510,14 +517,9 @@ update_myidx <- function(kidx_start,data_start,qtr_start,week_start){
   start_date <- data_start
   ref_date = week_start
   idx_fn = "semi_sub_idx"
-  update_ksep(ref_date,sheet_num,idx_fn,data_start)
+  update_ksep(ref_date,sheet_num,idx_fn,data_start,sector_rank)
 
-  #update auto parts weekly
-  sheet_num = 'sub_sector'
-  start_date <- data_start
-  ref_date = week_start
-  idx_fn = "sub_sec_idx"
-  update_ksep(ref_date,sheet_num,idx_fn,data_start)
+
 }
 
 #function for udpate sheets
