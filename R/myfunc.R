@@ -416,7 +416,7 @@ usky_lfcy <- function(ref_date,idx_fn){
     else    df_idx_ind<-data.frame(df_idx_ind,df_temp[,i],data.frame(ind_king,ind_df_sort[,1:3]))
   }
   
-  prices_run.xts <-xts(prices_run_idx_sort,index(get(ksmb_lst[[1]][1],envir=ktickerData)))[paste0(ref_date,'::')]
+  prices_run.xts <-xts(prices_run_idx_sort,index(get(smb_lst[[1]][1],envir=tickerData)))[paste0(ref_date,'::')]
   
   
   #colnames(prices_run.xts)<- names(ksmb_lst)
