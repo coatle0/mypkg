@@ -265,9 +265,9 @@ write_sggs_sheet<-function(tgt_df,tgt_sht,cell_org){
 #function for ksky update
 
 ksky_lfcy <- function(ref_date,idx_fn){
-  sheet_num <- 'sky_lfcy_viz'
-  sheet_num_sep <- 'sky_lfcy_viz_sep'
-  sheet_num_sep2 <- 'sky_lfcy_viz_sep2'
+  sheet_num <- 'ksky_lfcy_viz'
+  sheet_num_sep <- 'ksky_lfcy_viz_sep'
+  sheet_num_sep2 <- 'ksky_lfcy_viz_sep2'
   start_date <- ref_date
   
   
@@ -354,6 +354,96 @@ ksky_lfcy <- function(ref_date,idx_fn){
 
 }
 
+
+#function for usky update
+
+usky_lfcy <- function(ref_date,idx_fn){
+  sheet_num <- 'usky_lfcy_viz'
+  sheet_num_sep <- 'usky_lfcy_viz_sep'
+  sheet_num_sep2 <- 'usky_lfcy_viz_sep2'
+  start_date <- ref_date
+  
+  
+  idx_gs_lst <- read_gs_idx(idx_fn)
+  weight_lst<-idx_gs_lst[[2]]
+
+  smb_lst<-idx_gs_lst[[1]]
+
+  db_xts<-lapply(smb_lst,function(x) getSymbols(x[!(x %in% ls(envir=tickerData))],src='yahoo',env=tickerData,from=ref_date))
+
+  
+  ref_prices=lapply(smb_lst,function(x) do.call(cbind,lapply(x,function(x) coredata(Ad(get(x,envir=tickerData)[ref_date])))))
+  ref_pf = mapply(function(X,Y){X/Y}, X=weight_lst,Y=ref_prices)
+
+  #list close
+  prices_run=lapply(smb_lst, function(x) do.call(cbind,lapply(x,function(x){ print(x);coredata(Ad(get(x,envir = tickerData)))})))
+  #list separated jm
+  prices_run_ind = mapply(function(X,Y,Z){ as.data.frame(sweep(X,2,Y,FUN="/")*100) %>% set_names(Z)},X=prices_run,Y=ref_prices,Z=smb_lst)
+  #array idx
+  prices_run_idx = mapply(function(X,Y){ print(dim(X)); X %*% as.numeric(Y)},X=prices_run,Y=ref_pf)
+  #array sort
+  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx)),decreasing = T)]
+  
+  prun_idx_sort_ema5 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=5))
+  prun_idx_sort_ema20 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=20))
+  
+  #add EMA to index
+  
+  colnames(prun_idx_sort_ema5)<-paste0(colnames(prun_idx_sort_ema5),'ema5')
+  colnames(prun_idx_sort_ema20)<-paste0(colnames(prun_idx_sort_ema20),'ema20')
+  df_temp <- bind_cols(prices_run_idx_sort,prun_idx_sort_ema5,prun_idx_sort_ema20)
+  df_reloc <- data.frame()
+  
+  col_len<-dim(prices_run_idx_sort)[2]
+  
+  for (i in 1:col_len) {
+    if(i==1) df_reloc <- df_temp[,c(i,i+col_len,i+col_len*2)]
+    else    df_reloc<-data.frame(df_reloc,df_temp[,c(i,i+col_len,i+col_len*2)])
+  }
+  
+  #bind idx and ind jm
+  sector_rank <- order(colSums(tail(prices_run_idx)),decreasing = T)
+  df_idx_ind <- data.frame()
+  
+  for (i in 1:col_len) {
+    ind_df<- prices_run_ind[[sector_rank[i]]]
+    ind_df_order <- order(colSums(tail(ind_df[,-1])),decreasing = T)
+    ind_df_order <- ind_df_order+1
+    ind_df_sort <-ind_df[,ind_df_order]
+    ind_king<-data.frame(ind_df[,1])
+    colnames(ind_king) <- colnames(ind_df)[1]
+    if(i==1) df_idx_ind <- data.frame(df_temp[,i],data.frame(ind_king,ind_df_sort[,1:3]))
+    else    df_idx_ind<-data.frame(df_idx_ind,df_temp[,i],data.frame(ind_king,ind_df_sort[,1:3]))
+  }
+  
+  prices_run.xts <-xts(prices_run_idx_sort,index(get(ksmb_lst[[1]][1],envir=ktickerData)))[paste0(ref_date,'::')]
+  
+  
+  #colnames(prices_run.xts)<- names(ksmb_lst)
+  prices_run.df<-data.frame(date=index(prices_run.xts),coredata(prices_run.xts))
+  
+  prun_ema.df<-data.frame(date=index(prices_run.xts),df_reloc)
+  
+  prun_idx_ind_df <- data.frame(date=index(prices_run.xts),df_idx_ind)
+  
+  prun_idx_ind_df <- data.frame(date=index(prices_run.xts),df_idx_ind)
+  
+  gs4_auth(email = "coatle0@gmail.com")
+  ssid <- "1Edz1EPV6hqBM2tMKSkA3zNmysmugMrAg1u2H3fheXaM"
+  range_clear(ssid,sheet=sheet_num)
+  range_write(ssid,prices_run.df,range="A1",col_names = TRUE,sheet = sheet_num)
+  
+  range_write(ssid,prun_ema.df,range="I1",col_names = TRUE,sheet = sheet_num)
+  
+  range_clear(ssid,sheet=sheet_num_sep)
+  range_write(ssid,prun_idx_ind_df,range="A1",col_names = TRUE,sheet = sheet_num_sep)
+  
+  range_clear(ssid,sheet=sheet_num_sep2)
+  range_write(ssid,tail(prun_idx_ind_df,n=20),range="A1",col_names = TRUE,sheet = sheet_num_sep2)
+
+}
+
+
 #function for udpate sheets
 #function for udpate sheets
 update_kidx <- function(ref_date,sheet_num,idx_fn,start_date){
@@ -429,11 +519,20 @@ update_ksep <- function(ref_date,sheet_num,idx_fn,start_date,sector_rank){
 
   ksmb_lst<-idx_gs_lst[[1]]
 
+<<<<<<< HEAD
+  #adopt sector rank
+=======
   #adopt sector ranking
   kweight_lst<-kweight_lst[sector_rank]
+>>>>>>> 1da72be12541199a27dd07b2ce1a885b0b609efe
 
+<<<<<<< HEAD
+
+
+=======
   ksmb_lst<-ksmb_lst[sector_rank]
 
+>>>>>>> 1da72be12541199a27dd07b2ce1a885b0b609efe
   kidx_xts<-lapply(ksmb_lst,function(y){print(y);lapply(y,function(x){ ifelse(!exists(x,envir=ktickerData),
                                                                               {tqk_code<-code[match(x,code$name),3]$code;yahoo_code<-paste0(tqk_code,".KQ");
                                                                               temp<-tryCatch(expr= tqk_get(tqk_code,from=start_date),
