@@ -519,20 +519,11 @@ update_ksep <- function(ref_date,sheet_num,idx_fn,start_date,sector_rank){
 
   ksmb_lst<-idx_gs_lst[[1]]
 
-<<<<<<< HEAD
-  #adopt sector rank
-=======
   #adopt sector ranking
   kweight_lst<-kweight_lst[sector_rank]
->>>>>>> 1da72be12541199a27dd07b2ce1a885b0b609efe
 
-<<<<<<< HEAD
-
-
-=======
   ksmb_lst<-ksmb_lst[sector_rank]
 
->>>>>>> 1da72be12541199a27dd07b2ce1a885b0b609efe
   kidx_xts<-lapply(ksmb_lst,function(y){print(y);lapply(y,function(x){ ifelse(!exists(x,envir=ktickerData),
                                                                               {tqk_code<-code[match(x,code$name),3]$code;yahoo_code<-paste0(tqk_code,".KQ");
                                                                               temp<-tryCatch(expr= tqk_get(tqk_code,from=start_date),
