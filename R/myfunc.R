@@ -469,7 +469,7 @@ update_kidx <- function(ref_date,sheet_num,idx_fn,start_date){
 
   prices_run_idx[,grepl('spd',colnames(prices_run_idx),fixed=T)]<-prices_run_idx[,grepl('spd',colnames(prices_run_idx),fixed=T)]+100
 
-  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx)),decreasing = T)]
+  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=5)),decreasing = T)]
 
   top4_sub60_prices_run<-tail(prices_run_idx_sort[,1:4],n=60)
   top4_sub60_idx <-tail(index(get(ksmb_lst[[1]][1],envir=ktickerData)),n=60)
@@ -540,7 +540,7 @@ update_ksep <- function(ref_date,sheet_num,idx_fn,start_date,sector_rank){
   prices_run=lapply(ksmb_lst, function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir = ktickerData))))))
   prices_run_normal = mapply(function(X,Y,Z){as.data.frame(sweep(X,2,Y,FUN="/")*100) %>% set_names(Z)},X=prices_run,Y=ref_prices,Z=ksmb_lst)
   # get top 3 performer
-  prices_run_idx_sort <-lapply(prices_run_normal, function(x) x[,order(colSums(tail(x)),decreasing=T)[1:3]])
+  prices_run_idx_sort <-lapply(prices_run_normal, function(x) x[,order(colSums(tail(x,n=5)),decreasing=T)[1:3]])
   prices_run.xts <-lapply(prices_run_idx_sort,function(x){xts(x,index(get(ksmb_lst[[1]][1],envir=ktickerData)))[paste0(ref_date,'::')]})
   names(prices_run.xts) <- c()
 
@@ -639,7 +639,7 @@ update_uidx <- function(ref_date,sheet_num,idx_fn){
   prices_run_idx = mapply(function(X,Y){ print(dim(X)); X %*% as.numeric(Y)},X=prices_run,Y=ref_pf)
 
   #modifying here
-  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx)),decreasing = T)]
+  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=5)),decreasing = T)]
 
   sector_rank <- order(colSums(tail(prices_run_idx)),decreasing = T)
 
@@ -685,7 +685,7 @@ update_usep <- function(ref_date,sheet_num,idx_fn,sector_rank){
   print("competed xts")
   prices_run_idx = mapply(function(X,Y,Z){ as.data.frame(sweep(X,2,Y,FUN="/")*100) %>% set_names(Z)},X=prices_run,Y=ref_prices,Z=smb_lst)
   print('matrix X vector ')
-  prices_run_idx_sort <-lapply(prices_run_idx, function(x) x[,order(colSums(tail(x)),decreasing=T)[1:3]])
+  prices_run_idx_sort <-lapply(prices_run_idx, function(x) x[,order(colSums(tail(x,n=5)),decreasing=T)[1:3]])
   prices_run.xts <-lapply(prices_run_idx_sort,function(x){xts(x,index(get(smb_lst[[1]][1],envir=tickerData)))[paste0(ref_date,'::')]})
   names(prices_run.xts)<- c()
 
