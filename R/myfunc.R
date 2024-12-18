@@ -262,6 +262,30 @@ write_sggs_sheet<-function(tgt_df,tgt_sht,cell_org){
   range_write(ssid,tgt_df,range=cell_org,col_names = TRUE,sheet = tgt_sht)
 }
 
+add_asgs_sheet<-function(tgt_df,tgt_sht,cell_org){
+
+  gs4_auth(email = "coatle0@gmail.com")
+  ssid <- "1M0LjBg2tPZprA-BIvsOZXjNPyK_gKm4pY4Ns93gvgJo"
+  sheet_nm <- tgt_sht
+  range_write(ssid,tgt_df,range=cell_org,col_names = TRUE,sheet = tgt_sht)
+}
+
+add_rtgs_sheet<-function(tgt_df,tgt_sht,cell_org){
+
+  gs4_auth(email = "coatle0@gmail.com")
+  ssid <- "1GWW0Q1RgMNAvSG7S4OyrbXSpcSHDnMSmd2uTsmZyJJE"
+  sheet_nm <- tgt_sht
+  range_write(ssid,tgt_df,range=cell_org,col_names = TRUE,sheet = tgt_sht)
+}
+
+add_sggs_sheet<-function(tgt_df,tgt_sht,cell_org){
+
+  gs4_auth(email = "coatle0@gmail.com")
+  ssid <- "1Edz1EPV6hqBM2tMKSkA3zNmysmugMrAg1u2H3fheXaM"
+  sheet_nm <- tgt_sht
+  range_write(ssid,tgt_df,range=cell_org,col_names = TRUE,sheet = tgt_sht)
+}
+
 #function for ksky update
 
 ksky_lfcy <- function(ref_date,idx_fn){
