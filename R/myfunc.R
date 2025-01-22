@@ -510,9 +510,9 @@ update_kidx <- function(ref_date,sheet_num,idx_fn,start_date){
   top_sub20_prices_run.df<-data.frame(date=top4_sub20_idx,top4_sub20_prices_run_nml)
 
 
-  sector_rank <- order(colSums(tail(prices_run_idx)),decreasing = T)
-
-
+  sector_rank <- order(colSums(tail(prices_run_idx,n=5)),decreasing = T)
+  print('sector rank')
+  print(sector_rank)
 
   prices_run.xts <-xts(prices_run_idx_sort,index(get(ksmb_lst[[1]][1],envir=ktickerData)))[paste0(ref_date,'::')]
 
