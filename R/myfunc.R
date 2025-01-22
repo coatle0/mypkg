@@ -317,7 +317,7 @@ ksky_lfcy <- function(ref_date,idx_fn){
   #array idx
   prices_run_idx = mapply(function(X,Y){X %*% as.numeric(Y)},X=prices_run,Y=ref_pf)
   #array sort
-  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx)),decreasing = T)]
+  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=5)),decreasing = T)]
   
   prun_idx_sort_ema5 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=5))
   prun_idx_sort_ema20 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=20))
@@ -342,7 +342,7 @@ ksky_lfcy <- function(ref_date,idx_fn){
   
   for (i in 1:col_len) {
     ind_df<- prices_run_ind[[sector_rank[i]]]
-    ind_df_order <- order(colSums(tail(ind_df[,-1])),decreasing = T)
+    ind_df_order <- order(colSums(tail(ind_df[,-1],n=5)),decreasing = T)
     ind_df_order <- ind_df_order+1
     ind_df_sort <-ind_df[,ind_df_order]
     ind_king<-data.frame(ind_df[,1])
@@ -406,7 +406,7 @@ usky_lfcy <- function(ref_date,idx_fn){
   #array idx
   prices_run_idx = mapply(function(X,Y){ print(dim(X)); X %*% as.numeric(Y)},X=prices_run,Y=ref_pf)
   #array sort
-  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx)),decreasing = T)]
+  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=5)),decreasing = T)]
   
   prun_idx_sort_ema5 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=5))
   prun_idx_sort_ema20 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=20))
@@ -431,7 +431,7 @@ usky_lfcy <- function(ref_date,idx_fn){
   
   for (i in 1:col_len) {
     ind_df<- prices_run_ind[[sector_rank[i]]]
-    ind_df_order <- order(colSums(tail(ind_df[,-1])),decreasing = T)
+    ind_df_order <- order(colSums(tail(ind_df[,-1],n=5)),decreasing = T)
     ind_df_order <- ind_df_order+1
     ind_df_sort <-ind_df[,ind_df_order]
     ind_king<-data.frame(ind_df[,1])
