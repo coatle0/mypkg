@@ -337,7 +337,7 @@ ksky_lfcy <- function(ref_date,idx_fn){
   }
   
   #bind idx and ind jm
-  sector_rank <- order(colSums(tail(prices_run_idx)),decreasing = T)
+  sector_rank <- order(colSums(tail(prices_run_idx,n=5)),decreasing = T)
   df_idx_ind <- data.frame()
   
   for (i in 1:col_len) {
@@ -426,7 +426,7 @@ usky_lfcy <- function(ref_date,idx_fn){
   }
   
   #bind idx and ind jm
-  sector_rank <- order(colSums(tail(prices_run_idx)),decreasing = T)
+  sector_rank <- order(colSums(tail(prices_run_idx,n=5)),decreasing = T)
   df_idx_ind <- data.frame()
   
   for (i in 1:col_len) {
@@ -665,7 +665,7 @@ update_uidx <- function(ref_date,sheet_num,idx_fn){
   #modifying here
   prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=5)),decreasing = T)]
 
-  sector_rank <- order(colSums(tail(prices_run_idx)),decreasing = T)
+  sector_rank <- order(colSums(tail(prices_run_idx,n=5)),decreasing = T)
 
 
   print('matrix X vector ')
