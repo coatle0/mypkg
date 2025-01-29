@@ -665,7 +665,7 @@ update_uidx <- function(ref_date,sheet_num,idx_fn){
   #modifying here
   prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=5)),decreasing = T)]
 
-  sector_rank <- order(colSums(tail(prices_run_idx,n=5)),decreasing = T)
+  sector_rank <- order(colSums(tail(prices_run_idx,n=1)),decreasing = T)
 
 
   print('matrix X vector ')
