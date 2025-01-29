@@ -667,6 +667,8 @@ update_uidx <- function(ref_date,sheet_num,idx_fn){
 
   sector_rank <- order(colSums(tail(prices_run_idx,n=1)),decreasing = T)
 
+  print("sector rank")
+  print(sector_rank)
 
   print('matrix X vector ')
   prices_run.xts <-xts(prices_run_idx_sort,index(get(smb_lst[[1]][1],envir=tickerData)))[paste0(ref_date,'::')]
