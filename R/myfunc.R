@@ -663,9 +663,10 @@ update_uidx <- function(ref_date,sheet_num,idx_fn){
   prices_run_idx = mapply(function(X,Y){ print(dim(X)); X %*% as.numeric(Y)},X=prices_run,Y=ref_pf)
 
   #modifying here
-  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=5)),decreasing = T)]
+  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=1)),decreasing = T)]
 
-  sector_rank <- order(colSums(tail(prices_run_idx,n=1)),decreasing = T)
+  sector_rank <- order(tail(prices_run_idx,n=1)),decreasing = T)
+  print(tail(prices_run_idx,n=1))
 
   print("sector rank")
   print(sector_rank)
