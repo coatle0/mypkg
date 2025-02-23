@@ -673,7 +673,7 @@ update_uidxw <- function(ref_date,sheet_num,idx_fn,ref_rng){
   print(sector_rank)
 
   print('matrix X vector ')
-  prices_run.xts <-xts(prices_run_idx_sort,index(get(smb_lst[[1]][1],envir=tickerData))[paste0(ref_date,'::')][1:6])[,1:8]
+  prices_run.xts <-xts(prices_run_idx_sort,index(get(smb_lst[[1]][1],envir=tickerData)[paste0(ref_date,'::')])[1:6])[,1:8]
   #colnames(prices_run.xts)<-names(smb_lst)
   prices_run.df<-data.frame(date=index(prices_run.xts),coredata(prices_run.xts))
 
