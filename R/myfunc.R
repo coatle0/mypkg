@@ -657,7 +657,7 @@ update_uidxw <- function(ref_date,sheet_num,idx_fn,ref_rng){
   ref_pf = mapply(function(X,Y){X/Y}, X=weight_lst,Y=ref_prices)
 
   print('calculate portfolio factor')
-  prices_run=lapply(smb_lst, function(x) do.call(cbind,lapply(x,function(x){ print(x);coredata(Ad(get(x,envir = tickerData))[paste0(ref_data,'::')])})))
+  prices_run=lapply(smb_lst, function(x) do.call(cbind,lapply(x,function(x){ print(x);coredata(Ad(get(x,envir = tickerData))[paste0(ref_date,'::')])})))
   print("competed xts")
   #prices_run_idx = mapply(function(X,Y){ print(dim(X)); X %*% as.numeric(Y)},X=prices_run,Y=ref_pf,SIMPLIFY = FALSE)
   prices_run_idx = mapply(function(X,Y){ print(dim(X)); X %*% as.numeric(Y)},X=prices_run,Y=ref_pf)
