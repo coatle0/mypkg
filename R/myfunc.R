@@ -657,11 +657,11 @@ update_uidxw <- function(ref_date,sheet_num,idx_fn,ref_rng){
   ref_pf = mapply(function(X,Y){X/Y}, X=weight_lst,Y=ref_prices)
 
   print('calculate portfolio factor')
-  prices_run=lapply(smb_lst, function(x) do.call(cbind,lapply(x,function(x){ print(x);coredata(Ad(get(x,envir = tickerData)))})))
+  prices_run=lapply(smb_lst, function(x) do.call(cbind,lapply(x,function(x){ print(x);coredata(Ad(get(x,envir = tickerData))[paste0(ref_data,'::')])})))
   print("competed xts")
   #prices_run_idx = mapply(function(X,Y){ print(dim(X)); X %*% as.numeric(Y)},X=prices_run,Y=ref_pf,SIMPLIFY = FALSE)
   prices_run_idx = mapply(function(X,Y){ print(dim(X)); X %*% as.numeric(Y)},X=prices_run,Y=ref_pf)
-  prices_run_idx = prices_run_idx[1:5,]
+  prices_run_idx = prices_run_idx[1:6,]
 
   #modifying here
   prices_run_idx_sort<-prices_run_idx[,order(tail(prices_run_idx,n=1),decreasing = T)]
@@ -673,7 +673,7 @@ update_uidxw <- function(ref_date,sheet_num,idx_fn,ref_rng){
   print(sector_rank)
 
   print('matrix X vector ')
-  prices_run.xts <-xts(prices_run_idx_sort,index(get(smb_lst[[1]][1],envir=tickerData))[1:5])[,1:8]
+  prices_run.xts <-xts(prices_run_idx_sort,index(get(smb_lst[[1]][1],envir=tickerData))[paste0(ref_date,'::')][1:5])[,1:8]
   #colnames(prices_run.xts)<-names(smb_lst)
   prices_run.df<-data.frame(date=index(prices_run.xts),coredata(prices_run.xts))
 
