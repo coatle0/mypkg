@@ -640,6 +640,53 @@ update_myidx <- function(kidx_start,data_start,qtr_start,week_start){
 
 }
 
+#uidx 5days snapshot
+#modifying now 250223
+update_uidxw <- function(ref_date,sheet_num,idx_fn,ref_rng){
+  #envrionment for data
+
+
+  idx_gs_lst <- read_gs_idx(idx_fn)
+  weight_lst<-idx_gs_lst[[2]]
+
+  smb_lst<-idx_gs_lst[[1]]
+
+  db_xts<-lapply(smb_lst,function(x) getSymbols(x[!(x %in% ls(envir=tickerData))],src='yahoo',env=tickerData,from=ref_date))
+
+  ref_prices=lapply(smb_lst,function(x) do.call(cbind,lapply(x,function(x) coredata(Ad(get(x,envir=tickerData)[ref_date])))))
+  ref_pf = mapply(function(X,Y){X/Y}, X=weight_lst,Y=ref_prices)
+
+  print('calculate portfolio factor')
+  prices_run=lapply(smb_lst, function(x) do.call(cbind,lapply(x,function(x){ print(x);coredata(Ad(get(x,envir = tickerData)))})))
+  print("competed xts")
+  #prices_run_idx = mapply(function(X,Y){ print(dim(X)); X %*% as.numeric(Y)},X=prices_run,Y=ref_pf,SIMPLIFY = FALSE)
+  prices_run_idx = mapply(function(X,Y){ print(dim(X)); X %*% as.numeric(Y)},X=prices_run,Y=ref_pf)
+  prices_run_idx = prices_run_idx[1:5,]
+
+  #modifying here
+  prices_run_idx_sort<-prices_run_idx[,order(tail(prices_run_idx,n=1)),decreasing = T)]
+
+  sector_rank <- order(tail(prices_run_idx,n=1),decreasing = T)
+  print(tail(prices_run_idx,n=1))
+
+  print("sector rank")
+  print(sector_rank)
+
+  print('matrix X vector ')
+  prices_run.xts <-xts(prices_run_idx_sort,index(get(smb_lst[[1]][1],envir=tickerData)))[paste0(ref_date,'::')]
+  #colnames(prices_run.xts)<-names(smb_lst)
+  prices_run.df<-data.frame(date=index(prices_run.xts),coredata(prices_run.xts))
+
+  gs4_auth(email = "coatle0@gmail.com")
+  ssid <- "1Edz1EPV6hqBM2tMKSkA3zNmysmugMrAg1u2H3fheXaM"
+  range_clear(ssid,sheet=sheet_num)
+  range_write(ssid,prices_run.df,range=ref_rng,col_names = TRUE,sheet=sheet_num)
+
+  return(sector_rank)
+}
+
+
+
 #function for udpate sheets
 #modifying now 230518
 update_uidx <- function(ref_date,sheet_num,idx_fn){
