@@ -679,7 +679,7 @@ update_uidxw <- function(ref_date,sheet_num,idx_fn,ref_rng){
 
   gs4_auth(email = "coatle0@gmail.com")
   ssid <- "1Edz1EPV6hqBM2tMKSkA3zNmysmugMrAg1u2H3fheXaM"
-  range_clear(ssid,sheet=sheet_num)
+  #range_clear(ssid,sheet=sheet_num)
   range_write(ssid,prices_run.df,range=ref_rng,col_names = TRUE,sheet=sheet_num)
 
   return(sector_rank)
