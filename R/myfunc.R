@@ -206,6 +206,24 @@ read_rtgs_idx<-function(gs_sheet_id){
   return(list(ksmb_lst,kweight_lst))
 }
 
+# asset jm read from googlesheet for shield
+read_asgs_idx<-function(gs_sheet_id){
+
+  gs4_auth(email = "coatle0@gmail.com")
+  ssid <- "1M0LjBg2tPZprA-BIvsOZXjNPyK_gKm4pY4Ns93gvgJo"
+  test_idx_wt<-read_sheet(ssid,sheet=gs_sheet_id)
+  test_idx_wt_lst <- split.default(test_idx_wt,sub(".*_","",names(test_idx_wt)))
+  test_wt <- test_idx_wt_lst[[2]]
+  test_idx <- test_idx_wt_lst[[1]]
+  #test_ref <- test_idx_wt_lst[[2]]
+
+  kweight_lst<-lapply(test_wt,function(x) x[!is.na(x)])
+  ksmb_lst<-lapply(test_idx, function(x) x[!is.na(x)])
+  #kref_lst<-lapply(test_ref, function(x) x[!is.na(x)])
+  #return(list(ksmb_lst,kweight_lst,kref_lst))
+  return(list(ksmb_lst,kweight_lst))
+}
+
 read_asgs_sheet<-function(gs_sheet_id){
 
   gs4_auth(email = "coatle0@gmail.com")
