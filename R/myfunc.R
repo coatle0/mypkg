@@ -511,7 +511,7 @@ update_kidx <- function(ref_date,sheet_num,idx_fn,start_date){
 
   prices_run_idx[,grepl('spd',colnames(prices_run_idx),fixed=T)]<-prices_run_idx[,grepl('spd',colnames(prices_run_idx),fixed=T)]+100
 
-  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=5)),decreasing = T)]
+  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=1)),decreasing = T)]
 
   top4_sub60_prices_run<-tail(prices_run_idx_sort[,1:4],n=60)
   top4_sub60_idx <-tail(index(get(ksmb_lst[[1]][1],envir=ktickerData)),n=60)
