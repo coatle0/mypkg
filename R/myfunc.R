@@ -894,7 +894,7 @@ resume_env<-function(wd){
 update_volmon<-function(wd){
 
 wd_str<-paste0("C:/",wd,"/")
-  
+resume_env(wd)  
 load(paste0(wd_str,"vmonGlobal.RData"))
 
 volmon<-read_csv(paste0(wd_str,"volmon.csv"),locale=locale('ko',encoding='cp949'))
