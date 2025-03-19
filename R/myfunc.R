@@ -873,7 +873,6 @@ init_volmon<-function(wd){
 }
 
 
-
 resume_env<-function(wd){
   wd_str<-paste0("C:/",wd,"/")
   load(paste0(wd_str,"vmonGlobal.RData"),envir=.GlobalEnv)
@@ -893,7 +892,7 @@ update_volmon<-function(wd){
 
 wd_str<-paste0("C:/",wd,"/")
   
- resume_env(wd)
+load(paste0(wd_str,"vmonGlobal.RData"))
 
 volmon<-read_csv(paste0(wd_str,"volmon.csv"),locale=locale('ko',encoding='cp949'))
 jm_lst<-t(volmon[,2])
