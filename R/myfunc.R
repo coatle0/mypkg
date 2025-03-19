@@ -864,7 +864,10 @@ init_volmon<-function(wd){
   #   assign(paste0(code[match(substr(x,2,7),code$code),2]$name,"_vsdfm"),dut_x,envir=vmonenv)
   # }
   
-  
+  assign('vmonenv',vmonenv,envir=.GlobalEnv)
+  assign('diff_env',diff_env,envir=.GlobalEnv)
+  assign('nor_vol_env',nor_vol_env,envir=.GlobalEnv)
+
   save.image(file=paste0(wd_str,"vmonGlobal.RData"))
   #saveRDS(vmonenv,file=paste0(wd_str,"vmonenv.RData"))
   #saveRDS(diff_env,file=paste0(wd_str,"diff_env.RData"))
