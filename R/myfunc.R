@@ -876,7 +876,7 @@ init_volmon<-function(wd){
 
 resume_env<-function(wd){
   wd_str<-paste0("C:/",wd,"/")
-  load(paste0(wd_str,"vmonGlobal.RData"))
+  load(paste0(wd_str,"vmonGlobal.RData"),envir=.GlobalEnv)
   #vmonenv<-readRDS("vmonenv.RData")
   #diff_env<-readRDS("diff_env.RData")
   #nor_vol_env<-readRDS("nor_vol_env.RData")
