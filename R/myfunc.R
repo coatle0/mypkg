@@ -920,6 +920,8 @@ temp<-Y
 },X=volmon_lst,Y=x);
 }
 )
+cal_5m_idx()
+
 save.image(file=paste0(wd_str,"vmonGlobal.RData"))
 
 }
