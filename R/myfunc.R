@@ -813,88 +813,153 @@ update_myuidx<-function(qtr_ref_date,week_ref_date,idx_fn){
 }
 
 
-
-init_volmon<-function(ksmb_lst){
-  setwd("~")
-
+init_volmon<-function(wd){
   vmonenv <- new.env()
   diff_env <- new.env()
   nor_vol_env <- new.env()
-
-  wd_str<-"C:/Users/coatle/Documents"
-
+  
+  wd_str<-paste0("C:/",wd,"/")
+  
   assign("wd_str",wd_str,envir=.GlobalEnv)
-
+  
   today_str <- Sys.Date()
   assign('today_str',today_str,envir=.GlobalEnv)
-
-  code<-code_get(fresh = TRUE)
+  
+  code<-code_get()
   assign('code',code,envir=.GlobalEnv)
-
-  empty_df<-c(open=0,high=0,low=0,close=0,volume=0)
-  dt<-as.POSIXct(paste0(today_str,"0900"),format="%Y-%m-%d%H%M");
-  empty_xts<-xts(t(empty_df),dt)
-
-  volmon <- read.csv("~/volmon.csv")
-
-  jm_lst<-t(volmon[,2])
+  
+  time_index <- as.POSIXct(character())
+  empty_xts <- xts(matrix(ncol = 5, nrow = 0), order.by = time_index)
+  
+  # 컬럼 이름 지정
+  colnames(empty_xts) <- c('open','high','low','close','volume')
+  
+  
+  volmon <- read_csv('c:/lab/tgt_jmlist.csv',locale=locale('ko',encoding='cp949'))
+  
+  jm_lst<-substr(volmon$jm,2,7)
   assign('jm_lst',jm_lst,envir=.GlobalEnv)
-
-  init_envir<-lapply(jm_lst,function(x) assign(x,empty_xts,envir=vmonenv))
+  
+  idx_gs_lst <- read_gs_idx('kr_idx')
+  kweight_lst<-idx_gs_lst[[2]]
+  ksmb_lst<-idx_gs_lst[[1]]
+  assign('ksmb_lst',ksmb_lst,envir=.GlobalEnv)
+  assign('kweight_lst',kweight_lst,envir=.GlobalEnv)
+  
+  
+  
+  jmnm_lst<-lapply(jm_lst,function(x) code$name[match(x,code$scode)])
+  jmnm_lst <- unlist(jmnm_lst)
+  assign('jmnm_lst',jmnm_lst,envir=.GlobalEnv)
+  
+  init_envir<-lapply(jmnm_lst,function(x) assign(x,empty_xts,envir=vmonenv))
 
   #load vsd file
-  vsdfm_lst<-lapply(ksmb_lst,function(x){
-    dut<-read.csv(paste0(wd_str,'/tm_study/',x,'_vsdfm.csv'));
-    dt<-paste0(today_str,' ',dut$idx)
-    dt<-as.POSIXct(dt,format="%Y-%m-%d %H:%M");
-    #print(y)
-    dut_x <- xts(dut[,c('mean','sd3')],dt);
-    assign(paste0(code[match(substr(x,2,7),code$code),2]$name,"_vsdfm"),dut_x,envir=vmonenv)
-  }
-  )
-
-  assign('vmonenv',vmonenv,envir=.GlobalEnv)
-  assign('diff_env',diff_env,envir=.GlobalEnv)
-  assign('nor_vol_env',nor_vol_env,envir=.GlobalEnv)
-
+  # vsdfm_lst<-lapply(ksmb_lst,function(x){
+  #   dut<-read.csv(paste0(wd_str,'/tm_study/',x,'_vsdfm.csv'));
+  #   dt<-paste0(today_str,' ',dut$idx)
+  #   dt<-as.POSIXct(dt,format="%Y-%m-%d %H:%M");
+  #   #print(y)
+  #   dut_x <- xts(dut[,c('mean','sd3')],dt);
+  #   assign(paste0(code[match(substr(x,2,7),code$code),2]$name,"_vsdfm"),dut_x,envir=vmonenv)
+  # }
+  
+  
+  save.image(file=paste0(wd_str,"vmonGlobal.RData"))
+  #saveRDS(vmonenv,file=paste0(wd_str,"vmonenv.RData"))
+  #saveRDS(diff_env,file=paste0(wd_str,"diff_env.RData"))
+  #saveRDS(nor_vol_env,file=paste0(wd_str,"nor_vol_env.RData"))
+  
 }
 
 
 
-resume_env<-function(){
+resume_env<-function(wd){
+  wd_str<-paste0("C:/",wd,"/")
+  load(paste0(wd_str,"vmonGlobal.RData"))
+  #vmonenv<-readRDS("vmonenv.RData")
+  #diff_env<-readRDS("diff_env.RData")
+  #nor_vol_env<-readRDS("nor_vol_env.RData")
 
-  vmonenv<-readRDS("vmonenv.RData")
-  diff_env<-readRDS("diff_env.RData")
-  nor_vol_env<-readRDS("nor_vol_env.RData")
-
-  assign('vmonenv',vmonenv,envir=.GlobalEnv)
-  assign('diff_env',diff_env,envir=.GlobalEnv)
-  assign('nor_vol_env',nor_vol_env,envir=.GlobalEnv)
+  #assign('vmonenv',vmonenv,envir=.GlobalEnv)
+  #assign('diff_env',diff_env,envir=.GlobalEnv)
+  #assign('nor_vol_env',nor_vol_env,envir=.GlobalEnv)
 }
 
 
-update_vmon<-function(today_str){
 
-  volmon <- read.csv("~/volmon.csv")
-  jm_lst<-t(volmon[,2])
-  time_lst <- volmon$time
-  time_unq <- unique(time_lst)
-  print(time_unq)
-  #data frame to list
-  volmon_lst<-split(volmon,row(volmon)[,2])
 
-  #input volmon
-  volmon_xts_lst<-lapply(as.list(time_unq),function(x) { mapply(function(X,Y){dt<-ifelse(Y<1000,paste0(today_str,' 0',Y),paste0(today_str,' ',Y));
-  dt<-as.POSIXct(dt,format="%Y-%m-%d %H%M");
-  x_xts<-xts(X[,c('open','high','low','close','volume')],dt);
-  tgt_dut<-get(X[,2],envir=vmonenv);
-  if(tgt_dut$open[1]==0){tgt_dut$open[1] = x_xts$open;tgt_dut$close[1] = x_xts$open}
-  x_xts_up<-rbind(tgt_dut[!(index(tgt_dut) %in% index(x_xts))],x_xts);
-  assign(X[,2],x_xts_up,envir=vmonenv)
-  temp<-Y
-  },X=volmon_lst,Y=x);
-  }
-  )
+update_volmon<-function(wd){
+
+wd_str<-paste0("C:/",wd,"/")
+  
+ resume_env(wd)
+
+volmon<-read_csv(paste0(wd_str,"volmon.csv"),locale=locale('ko',encoding='cp949'))
+jm_lst<-t(volmon[,2])
+time_lst <- volmon$time
+time_lst <- substr(time_lst,1,4)
+time_unq <- unique(time_lst)[1]
+print(time_unq)
+time_stamp <- paste0(substr(time_unq,1,3),ifelse(as.numeric(substr(time_unq,4,4))>5,'5','0'))
+
+print(time_stamp)
+#data frame to list
+volmon_lst<-split(volmon,row(volmon)[,2])
+
+#input volmon
+volmon_xts_lst<-lapply(as.list(time_stamp),function(x) { mapply(function(X,Y){dt<-paste0(today_str,' ',Y);
+dt<-as.POSIXct(dt,format="%Y-%m-%d %H%M");
+x_xts<-xts(X[,c('open','high','low','close','volume')],dt);
+tgt_dut<-get(X$code_name,envir=vmonenv);
+x_xts_up<-rbind(tgt_dut,x_xts);
+assign(X$code_name,x_xts_up,envir=vmonenv)
+temp<-Y
+},X=volmon_lst,Y=x);
+}
+)
+save.image(file=paste0(wd_str,"vmonGlobal.RData"))
+
+}
+
+cal_5m_idx<- function(){
+  ref_prices=lapply(ksmb_lst,function(x) do.call(cbind,lapply(
+    x,function(x) coredata(Op(get(x,envir=vmonenv)[1]))))%>%`colnames<-`(x))
+  
+  prices_run_ft<-lapply(ksmb_lst,function(x){do.call(merge,lapply(x,
+                                                                  function(y){Cl(get(y,envir=vmonenv))}))}%>%`colnames<-`(x))
+  
+  ref_pf = mapply(function(X,Y){X/Y}, X=kweight_lst,Y=ref_prices,SIMPLIFY = FALSE)
+  
+  
+  prices_run.idx = mapply(function(X,Y){X %*% as.numeric(Y)},X=prices_run_ft,
+                          Y=ref_pf,SIMPLIFY = FALSE)
+  
+  prices_run.xts = mapply(function(X,Y){ xts(X,index(Y))},X=prices_run.idx,
+                          Y=prices_run_ft,SIMPLIFY = FALSE)
+  idx_sort <- order(sapply(prices_run.xts,function(x) sum(tail(x[,1]))),decreasing=TRUE)
+  
+  prices_run_sort.xts<-prices_run.xts[idx_sort]
+  ksmb_lst_sort<-ksmb_lst[idx_sort]
+  assign('ksmb_lst_sort',ksmb_lst_sort,envir=.GlobalEnv)
+
+  idx_all.xts <- do.call(merge,prices_run_sort.xts[1:8])
+  idx_all.df <- data.frame(time=as.character(index(idx_all.xts)),coredata(idx_all.xts))
+  write_rtgs_sheet(idx_all.df,'fm_rt','A1')
+  #process sep chart
+
+  ref_prices=lapply(ksmb_lst_sort[1:9],function(x) do.call(cbind,lapply(x,function(x) coredata(Op(get(x,envir=vmonenv)))[1])))
+  prices_run=lapply(ksmb_lst_sort[1:9], function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir = vmonenv))))))
+  prices_run_normal = mapply(function(X,Y,Z){as.data.frame(sweep(X,2,Y,FUN="/")*100) %>% set_names(Z)},X=prices_run,Y=ref_prices,Z=ksmb_lst_sort[1:9])
+  prices_run_idx_sort <-lapply(prices_run_normal, function(x) x[,order(colSums(tail(x,n=1)),decreasing=T)[1:3]])
+  
+  prices_run_idx_sort_df<-as.data.frame(prices_run_idx_sort)
+  tgt_colnames <- strsplit(colnames(prices_run_idx_sort_df), split = "\\.")
+  tgt_colnames <-lapply(tgt_colnames, function(x) return(x[2]))
+  colnames(prices_run_idx_sort_df) <-   tgt_colnames
+  prices_run.df<-data.frame(date=as.character(index(get(ksmb_lst[[1]][1],envir=vmonenv))),prices_run_idx_sort_df)
+  write_rtgs_sheet(prices_run.df,'fm_rt_sep','A1')
+
 }
 
 volmon_vol_diff <- function(){lapply(volmon$code_name,function(x){
@@ -1072,3 +1137,5 @@ gen_vsdfm<- function(jm_code){
     assign(paste0(x,"_vsdfm"),dut_sd_df_wt,envir=tmenv)
   })
 }
+
+
