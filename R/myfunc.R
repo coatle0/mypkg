@@ -888,9 +888,6 @@ resume_env<-function(wd){
   #assign('nor_vol_env',nor_vol_env,envir=.GlobalEnv)
 }
 
-
-
-
 update_volmon<-function(wd){
 
 wd_str<-paste0("C:/",wd,"/")
@@ -903,9 +900,9 @@ time_lst <- volmon$time
 time_lst <- substr(time_lst,1,4)
 time_unq <- unique(time_lst)[1]
 print(time_unq)
-time_stamp <- paste0(substr(time_unq,1,3),ifelse(as.numeric(substr(time_unq,4,4))>5,'5','0'))
-
-print(time_stamp)
+#time_stamp <- paste0(substr(time_unq,1,3),ifelse(as.numeric(substr(time_unq,4,4))>5,'5','0'))
+time_stamp <- time_unq
+#print(time_stamp)
 #data frame to list
 volmon_lst<-split(volmon,row(volmon)[,2])
 
@@ -949,7 +946,10 @@ cal_5m_idx<- function(){
   assign('ksmb_lst_sort',ksmb_lst_sort,envir=.GlobalEnv)
 
   idx_all.xts <- do.call(merge,prices_run_sort.xts[1:8])
-  idx_all.df <- data.frame(time=as.character(index(idx_all.xts)),coredata(idx_all.xts))
+  tstamp <- strsplit(as.character(index(idx_all.xts)), " ")
+  second_tokens <- sapply(tstamp, function(x) x[2])
+
+  idx_all.df <- data.frame(time=second_tokens,coredata(idx_all.xts))
   write_rtgs_sheet(idx_all.df,'fm_rt','A1')
   #process sep chart
 
@@ -962,7 +962,12 @@ cal_5m_idx<- function(){
   tgt_colnames <- strsplit(colnames(prices_run_idx_sort_df), split = "\\.")
   tgt_colnames <-lapply(tgt_colnames, function(x) return(x[2]))
   colnames(prices_run_idx_sort_df) <-   tgt_colnames
-  prices_run.df<-data.frame(date=as.character(index(get(ksmb_lst[[1]][1],envir=vmonenv))),prices_run_idx_sort_df)
+  idx_all.xts <- do.call(merge,prices_run_sort.xts[1:8])
+  
+  tstamp <- strsplit(as.character(index(get(ksmb_lst[[1]][1],envir=vmonenv))), " ")
+  second_tokens <- sapply(tstamp, function(x) x[2])
+
+  prices_run.df<-data.frame(time=second_tokens,prices_run_idx_sort_df)
   write_rtgs_sheet(prices_run.df,'fm_rt_sep','A1')
 
 }
