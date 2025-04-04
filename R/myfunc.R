@@ -926,7 +926,7 @@ save.image(file=paste0(wd_str,"vmonGlobal.RData"))
 
 cal_5m_idx<- function(){
   ref_prices=lapply(ksmb_lst,function(x) do.call(cbind,lapply(
-    x,function(x) coredata(Op(get(x,envir=vmonenv)[1]))))%>%`colnames<-`(x))
+    x,function(x) coredata(Cl(get(x,envir=vmonenv)[1]))))%>%`colnames<-`(x))
   
   prices_run_ft<-lapply(ksmb_lst,function(x){do.call(merge,lapply(x,
                                                                   function(y){Cl(get(y,envir=vmonenv))}))}%>%`colnames<-`(x))
