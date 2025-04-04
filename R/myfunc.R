@@ -953,7 +953,7 @@ cal_5m_idx<- function(){
   write_rtgs_sheet(idx_all.df,'fm_rt','A1')
   #process sep chart
 
-  ref_prices=lapply(ksmb_lst_sort[1:9],function(x) do.call(cbind,lapply(x,function(x) coredata(Op(get(x,envir=vmonenv)))[1])))
+  ref_prices=lapply(ksmb_lst_sort[1:9],function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir=vmonenv)))[1])))
   prices_run=lapply(ksmb_lst_sort[1:9], function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir = vmonenv))))))
   prices_run_normal = mapply(function(X,Y,Z){as.data.frame(sweep(X,2,Y,FUN="/")*100) %>% set_names(Z)},X=prices_run,Y=ref_prices,Z=ksmb_lst_sort[1:9])
   prices_run_idx_sort <-lapply(prices_run_normal, function(x) x[,order(colSums(tail(x,n=1)),decreasing=T)[1:3]])
