@@ -9,6 +9,13 @@ bot=Bot(token=Sys.getenv("telegram_bot_token"))
 kw_bot=Bot(token=Sys.getenv("telegram_kw_token"))
 chat_id <- 1278251780
 
+tele_bot_send<-function(send_msg){
+  bot$sendMessage(chat_id = chat_id, text = send_msg)
+}
+
+tele_kwbot_send<-function(send_msg){
+  kwbot$sendMessage(chat_id = chat_id, text = send_msg)
+}
 
 
 #function for jm_code get
