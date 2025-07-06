@@ -14,7 +14,7 @@ tele_bot_send<-function(send_msg){
 }
 
 tele_kwbot_send<-function(send_msg){
-  kwbot$sendMessage(chat_id = chat_id, text = send_msg)
+  kw_bot$sendMessage(chat_id = chat_id, text = send_msg)
 }
 
 
