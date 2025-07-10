@@ -637,17 +637,17 @@ update_myidx <- function(kidx_start,data_start,qtr_start,week_start){
   update_ksep(ref_date,sheet_num,idx_fn,data_start,sector_rank)
 
   #update lib quarterly idx
-  sheet_num = 'lib_idx'
+  sheet_num = 'zg_idx'
   start_date <- data_start
   ref_date = week_start
-  idx_fn = "lib_sub_idx"
+  idx_fn = "zg_sub_idx"
   sector_rank<-update_kidx(ref_date,sheet_num,idx_fn,data_start)
 
   #update lib sep chart quarter
-  sheet_num = 'lib_sep_w'
+  sheet_num = 'zg_sep_w'
   start_date <- data_start
   ref_date = week_start
-  idx_fn = "lib_sub_idx"
+  idx_fn = "zg_sub_idx"
   update_ksep(ref_date,sheet_num,idx_fn,data_start,sector_rank)
 
   #update semi quarterly idx
