@@ -396,7 +396,7 @@ ksky_lfcy <- function(ref_date,idx_fn){
   range_clear(ssid,sheet=sheet_num)
   range_write(ssid,prices_run.df,range="A1",col_names = TRUE,sheet = sheet_num)
   
-  range_write(ssid,prun_ema.df,range="I1",col_names = TRUE,sheet = sheet_num)
+  range_write(ssid,tail(prun_ema.df,20),range="I1",col_names = TRUE,sheet = sheet_num)
   
   range_clear(ssid,sheet=sheet_num_sep)
   range_write(ssid,prun_idx_ind_df,range="A1",col_names = TRUE,sheet = sheet_num_sep)
