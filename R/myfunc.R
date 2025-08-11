@@ -395,7 +395,7 @@ ksky_lfcy <- function(ref_date,idx_fn){
   ssid <- "1Edz1EPV6hqBM2tMKSkA3zNmysmugMrAg1u2H3fheXaM"
   range_clear(ssid,sheet=sheet_num)
   range_write(ssid,prices_run.df,range="A1",col_names = TRUE,sheet = sheet_num)
-  
+  range_clear(ssid,sheet=sheet_num,range="I1:AZ200")
   range_write(ssid,prun_ema.df,range="I1",col_names = TRUE,sheet = sheet_num)
   
   range_clear(ssid,sheet=sheet_num_sep)
@@ -484,7 +484,7 @@ usky_lfcy <- function(ref_date,idx_fn){
   ssid <- "1Edz1EPV6hqBM2tMKSkA3zNmysmugMrAg1u2H3fheXaM"
   range_clear(ssid,sheet=sheet_num)
   range_write(ssid,prices_run.df,range="A1",col_names = TRUE,sheet = sheet_num)
-  
+  range_clear(ssid,sheet=sheet_num,range="I1:AZ200")
   range_write(ssid,prun_ema.df,range="I1",col_names = TRUE,sheet = sheet_num) 
   range_clear(ssid,sheet=sheet_num_sep)
   range_write(ssid,prun_idx_ind_df,range="A1",col_names = TRUE,sheet = sheet_num_sep)
