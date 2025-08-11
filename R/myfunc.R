@@ -385,7 +385,7 @@ ksky_lfcy <- function(ref_date,idx_fn){
   #colnames(prices_run.xts)<- names(ksmb_lst)
   prices_run.df<-data.frame(date=index(prices_run.xts),coredata(prices_run.xts))
   
-  prun_ema.df<-data.frame(date=index(prices_run.xts),df_reloc)
+  prun_ema.df<-data.frame(date=index(tail(prices_run.xts,20)),tail(df_reloc,20))
   
   prun_idx_ind_df <- data.frame(date=index(prices_run.xts),df_idx_ind)
   
@@ -396,7 +396,7 @@ ksky_lfcy <- function(ref_date,idx_fn){
   range_clear(ssid,sheet=sheet_num)
   range_write(ssid,prices_run.df,range="A1",col_names = TRUE,sheet = sheet_num)
   
-  range_write(ssid,tail(prun_ema.df,20),range="I1",col_names = TRUE,sheet = sheet_num)
+  range_write(ssid,prun_ema.df,range="I1",col_names = TRUE,sheet = sheet_num)
   
   range_clear(ssid,sheet=sheet_num_sep)
   range_write(ssid,prun_idx_ind_df,range="A1",col_names = TRUE,sheet = sheet_num_sep)
@@ -474,7 +474,7 @@ usky_lfcy <- function(ref_date,idx_fn){
   #colnames(prices_run.xts)<- names(ksmb_lst)
   prices_run.df<-data.frame(date=index(prices_run.xts),coredata(prices_run.xts))
   
-  prun_ema.df<-data.frame(date=index(prices_run.xts),df_reloc)
+  prun_ema.df<-data.frame(date=index(tail(prices_run.xts,20)),tail(df_reloc,20))
   
   prun_idx_ind_df <- data.frame(date=index(prices_run.xts),df_idx_ind)
   
@@ -485,7 +485,7 @@ usky_lfcy <- function(ref_date,idx_fn){
   range_clear(ssid,sheet=sheet_num)
   range_write(ssid,prices_run.df,range="A1",col_names = TRUE,sheet = sheet_num)
   
-  range_write(ssid,tail(prun_ema.df,20),range="I1",col_names = TRUE,sheet = sheet_num) 
+  range_write(ssid,prun_ema.df,range="I1",col_names = TRUE,sheet = sheet_num) 
   range_clear(ssid,sheet=sheet_num_sep)
   range_write(ssid,prun_idx_ind_df,range="A1",col_names = TRUE,sheet = sheet_num_sep)
   
