@@ -552,12 +552,12 @@ update_kidx <- function(ref_date,sheet_num,idx_fn,start_date){
   range_clear(ssid,sheet=sheet_num)
   range_write(ssid,prices_run.df,range="A1",col_names = TRUE,sheet = sheet_num)
 
-  if(sheet_num== 'kidx-Q'){
-    range_write(ssid,top_sub60_prices_run.df,range="Z1",col_names = TRUE,sheet = sheet_num)
-
-  }else {
-    range_write(ssid,top_sub20_prices_run.df,range="Z1",col_names = TRUE,sheet = sheet_num)
-  }
+#  if(sheet_num== 'kidx-Q'){
+#    range_write(ssid,top_sub60_prices_run.df,range="Z1",col_names = TRUE,sheet = sheet_num)
+#
+#  }else {
+#    range_write(ssid,top_sub20_prices_run.df,range="Z1",col_names = TRUE,sheet = sheet_num)
+#  }
 
   return(sector_rank)
 
