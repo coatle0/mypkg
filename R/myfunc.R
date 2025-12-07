@@ -385,7 +385,9 @@ ksky_lfcy <- function(ref_date,idx_fn){
   #colnames(prices_run.xts)<- names(ksmb_lst)
   prices_run.df<-data.frame(date=index(prices_run.xts),coredata(prices_run.xts))
   
-  prun_ema.df<-data.frame(date=index(tail(prices_run.xts,20)),tail(df_reloc,20))
+  #prun_ema.df<-data.frame(date=index(tail(prices_run.xts,20)),tail(df_reloc,20))
+
+  prun_ema.df<-data.frame(date=index(prices_run.xts),coredata(df_reloc))
   
   prun_idx_ind_df <- data.frame(date=index(prices_run.xts),df_idx_ind)
   
@@ -474,8 +476,9 @@ usky_lfcy <- function(ref_date,idx_fn){
   #colnames(prices_run.xts)<- names(ksmb_lst)
   prices_run.df<-data.frame(date=index(prices_run.xts),coredata(prices_run.xts))
   
-  prun_ema.df<-data.frame(date=index(tail(prices_run.xts,20)),tail(df_reloc,20))
-  
+  #prun_ema.df<-data.frame(date=index(tail(prices_run.xts,20)),tail(df_reloc,20))
+  prun_ema.df<-data.frame(date=index(prices_run.xts,20),coredata(df_reloc))
+
   prun_idx_ind_df <- data.frame(date=index(prices_run.xts),df_idx_ind)
   
   prun_idx_ind_df <- data.frame(date=index(prices_run.xts),df_idx_ind)
