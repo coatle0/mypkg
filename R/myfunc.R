@@ -914,8 +914,8 @@ init_volmon<-function(wd){
   assign('nor_vol_env',nor_vol_env,envir=.GlobalEnv)
 
   #initialize tgt_name_sort and assign as global variable
-  rgt_name_sort <- data.frame()
-  assign('nor_vol_env',nor_vol_env,envir=.GlobalEnv)
+  tgt_name_sort <- data.frame()
+  assign('tgt_name_sort',tgt_name_sort,envir=.GlobalEnv)
 
 
   save.image(file=paste0(wd_str,"vmonGlobal.RData"))
