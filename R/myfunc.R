@@ -1024,6 +1024,7 @@ cal_5m_idx<- function(){
   tgt_name_sort_update<-data.frame(time=tail(prices_run.df$time,n=1),t(colnames(prices_run.df)[2:dim(prices_run.df)[2]]))
   tgt_name_sort <- rbind(tgt_name_sort,tgt_name_sort_update)
   write_rtgs_sheet(tgt_name_sort,'fm_rt_name','A1')
+  assign('tgt_name_sort',tgt_name_sort,envir=.GlobalEnv)
 
 
 }
