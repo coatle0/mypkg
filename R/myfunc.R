@@ -913,6 +913,11 @@ init_volmon<-function(wd){
   assign('diff_env',diff_env,envir=.GlobalEnv)
   assign('nor_vol_env',nor_vol_env,envir=.GlobalEnv)
 
+  #initialize tgt_name_sort and assign as global variable
+  rgt_name_sort <- data.frame()
+  assign('nor_vol_env',nor_vol_env,envir=.GlobalEnv)
+
+
   save.image(file=paste0(wd_str,"vmonGlobal.RData"))
   #saveRDS(vmonenv,file=paste0(wd_str,"vmonenv.RData"))
   #saveRDS(diff_env,file=paste0(wd_str,"diff_env.RData"))
@@ -1014,6 +1019,12 @@ cal_5m_idx<- function(){
 
   prices_run.df<-data.frame(time=second_tokens,prices_run_idx_sort_df)
   write_rtgs_sheet(prices_run.df,'fm_rt_sep','A1')
+
+  #assign tgt_name dataframe
+  tgt_name_sort_update<-data.frame(time=tail(prices_run.df$time,n=1),t(colnames(prices_run.df)[2:dim(prices_run.df)[2]]))
+  tgt_name_sort <- rbind(tgt_name_sort,tgt_name_sort_update)
+  write_rtgs_sheet(tgt_name_sort,'fm_rt_name','A1')
+
 
 }
 
