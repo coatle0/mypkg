@@ -1025,6 +1025,7 @@ cal_5m_idx<- function(){
   tgt_name_sort <- rbind(tgt_name_sort,tgt_name_sort_update)
   write_rtgs_sheet(tgt_name_sort,'fm_rt_name','A1')
   assign('tgt_name_sort',tgt_name_sort,envir=.GlobalEnv)
+  save.image(file=paste0(wd_str,"vmonGlobal.RData"))
 
 
 }
