@@ -330,7 +330,7 @@ read_asgs_idx<-function(gs_sheet_id){
 read_bgdgs_idx<-function(gs_sheet_id){
 
   gs4_auth(email = "coatle0@gmail.com")
-  ssid <- "1M0LjBg2tPZprA-1GMlAwU5R5ikgdEedvSRqkzToj6T1iPhcfs5LbShtLro"
+  ssid <- "1GMlAwU5R5ikgdEedvSRqkzToj6T1iPhcfs5LbShtLro"
   test_idx_wt<-read_sheet(ssid,sheet=gs_sheet_id)
   test_idx_wt_lst <- split.default(test_idx_wt,sub(".*_","",names(test_idx_wt)))
   test_wt <- test_idx_wt_lst[[2]]
