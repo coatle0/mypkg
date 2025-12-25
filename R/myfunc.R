@@ -104,6 +104,98 @@ tqk_get <- function(x,
   
   return(as_tibble(x_ohlc[,c('date','open','high','low','close','volume','chgr','pswing','nswing')]))
 }
+#function for etf handling
+etfcode_get<-function(){
+  gen_otp_url =
+    'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd'
+  
+  down_url = 'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd'
+  
+  url_jmcode = 'dbms/MDC/STAT/standard/MDCSTAT04601'
+  
+  otp_jm = list(
+    locale = 'ko_KR',
+    share = '1',
+    csvxls_isNo = 'false',
+    name = 'fileDown',
+    url = url_jmcode
+  )
+  otp = POST(gen_otp_url, query = otp_jm) %>%
+    read_html() %>%
+    html_text()
+  
+  jm_code = POST(down_url, query = list(code = otp),
+                 add_headers(referer = gen_otp_url)) %>%
+    read_html(encoding = 'EUC-KR') %>%
+    html_text() %>%
+    read_csv(show_col_types = FALSE)
+  jm_code <- jm_code[,c(1:4,12)]
+  jm_code <- jm_code[,-3]
+  
+  colnames(jm_code)<-c('code','scode','name','asset')
+  
+  return(jm_code)
+}
+
+
+etf_get <- function(x,
+                    from='2025-01-01') {
+  gen_otp_url =
+    'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd'
+  
+  down_url = 'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd'
+  
+  url_ohlc = 'dbms/MDC/STAT/standard/MDCSTAT04501' 
+  
+  otp_ohlc = list(
+    locale= 'ko_KR',
+    strtDd=gsub('-','',from),
+    endDd = gsub('-','',as.character(today())),
+    isuCd = x,
+    isuCd2 = 'KR7152100004',
+    tboxisuCd_finder_secuprodisu1_1 = '472350/1Q 차이나H(H)',
+    codeNmisuCd_finder_secuprodisu1_1 = '1Q 차이나H(H)',
+    juya='ALL',
+    rghtTpCd = 'T',
+    share= '1',
+    money= '1',
+    csvxls_isNo='false',
+    name='fileDown',
+    url= url_ohlc
+  )
+  otp = POST(gen_otp_url, query = otp_ohlc) %>%
+    read_html() %>%
+    html_text()
+  
+  
+  x_ohlc = POST(down_url, query = list(code = otp),
+                add_headers(referer = gen_otp_url)) %>%
+    read_html(encoding = 'EUC-KR') %>%
+    html_text() %>%
+    read_csv(show_col_types = FALSE)
+  
+  colnames(x_ohlc)<-c('date','close','chg','chgr','NAV','open','high','low','volume','volm')
+  ohlc <- x_ohlc[,c('date','open','high','low','close','volume','chgr')] %>%
+    arrange(date) %>% 
+    mutate(
+      chgrlow   = (low / lag(close)   - 1) * 100,  # 전일 Low 대비
+      chgropen = (open / lag(close) - 1) * 100,  # 전일 종가 대비
+      chgrhigh     = (open / lag(close)       - 1) * 100   # 당일 시가 대비
+    )
+  
+  ohlc$ema5<-EMA(ohlc$close,n=5)
+  ohlc$ema20<-EMA(ohlc$close,n=20)
+  ohlc$ema5diff<-ohlc$close-ohlc$ema5
+  ohlc$ema20diff<-ohlc$close-ohlc$ema20
+  ohlc$ema5diffn<-ohlc$ema5diff/ohlc$close
+  ohlc$ema5diffn<-(ohlc$ema5diff/ohlc$close)*100
+  ohlc$ema20diffn<-(ohlc$ema20diff/ohlc$close)*100
+  
+  return(ohlc)
+}
+
+
+
 
 code<-code_get()
 #vline<-0
@@ -234,6 +326,24 @@ read_asgs_idx<-function(gs_sheet_id){
   return(list(ksmb_lst,kweight_lst))
 }
 
+# asset jm read from googlesheet for BGD
+read_bgdgs_idx<-function(gs_sheet_id){
+
+  gs4_auth(email = "coatle0@gmail.com")
+  ssid <- "1M0LjBg2tPZprA-1GMlAwU5R5ikgdEedvSRqkzToj6T1iPhcfs5LbShtLro"
+  test_idx_wt<-read_sheet(ssid,sheet=gs_sheet_id)
+  test_idx_wt_lst <- split.default(test_idx_wt,sub(".*_","",names(test_idx_wt)))
+  test_wt <- test_idx_wt_lst[[2]]
+  test_idx <- test_idx_wt_lst[[1]]
+  #test_ref <- test_idx_wt_lst[[2]]
+
+  kweight_lst<-lapply(test_wt,function(x) x[!is.na(x)])
+  ksmb_lst<-lapply(test_idx, function(x) x[!is.na(x)])
+  #kref_lst<-lapply(test_ref, function(x) x[!is.na(x)])
+  #return(list(ksmb_lst,kweight_lst,kref_lst))
+  return(list(ksmb_lst,kweight_lst))
+}
+
 read_asgs_sheet<-function(gs_sheet_id){
 
   gs4_auth(email = "coatle0@gmail.com")
@@ -263,6 +373,17 @@ read_sggs_sheet<-function(gs_sheet_id){
   return(test_idx_wt)
 }
 
+read_bgdgs_sheet<-function(gs_sheet_id){
+
+  gs4_auth(email = "coatle0@gmail.com")
+
+  ssid <- "1GMlAwU5R5ikgdEedvSRqkzToj6T1iPhcfs5LbShtLro"
+  test_idx_wt<-read_sheet(ssid,sheet=gs_sheet_id)
+
+  return(test_idx_wt)
+}
+
+
 write_asgs_sheet<-function(tgt_df,tgt_sht,cell_org){
 
   gs4_auth(email = "coatle0@gmail.com")
@@ -290,6 +411,16 @@ write_sggs_sheet<-function(tgt_df,tgt_sht,cell_org){
   range_write(ssid,tgt_df,range=cell_org,col_names = TRUE,sheet = tgt_sht)
 }
 
+write_bgdgs_sheet<-function(tgt_df,tgt_sht,cell_org){
+
+  gs4_auth(email = "coatle0@gmail.com")
+  ssid <- "1GMlAwU5R5ikgdEedvSRqkzToj6T1iPhcfs5LbShtLro"
+  range_clear(ssid,sheet=tgt_sht)
+  sheet_nm <- tgt_sht
+  range_write(ssid,tgt_df,range=cell_org,col_names = TRUE,sheet = tgt_sht)
+}
+
+
 add_asgs_sheet<-function(tgt_df,tgt_sht,cell_org){
 
   gs4_auth(email = "coatle0@gmail.com")
@@ -313,6 +444,15 @@ add_sggs_sheet<-function(tgt_df,tgt_sht,cell_org){
   sheet_nm <- tgt_sht
   range_write(ssid,tgt_df,range=cell_org,col_names = TRUE,sheet = tgt_sht)
 }
+
+add_bgdgs_sheet<-function(tgt_df,tgt_sht,cell_org){
+
+  gs4_auth(email = "coatle0@gmail.com")
+  ssid <- "1GMlAwU5R5ikgdEedvSRqkzToj6T1iPhcfs5LbShtLro"
+  sheet_nm <- tgt_sht
+  range_write(ssid,tgt_df,range=cell_org,col_names = TRUE,sheet = tgt_sht)
+}
+
 
 ksky_lfcy <- function(ref_date,idx_fn){
   sheet_num <- 'ksky_lfcy_viz'
