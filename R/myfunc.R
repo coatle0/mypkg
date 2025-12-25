@@ -49,7 +49,7 @@ code_get<-function(){
 }
 
 tqk_get <- function(x,
-                    from) {
+                    from='2025-01-01') {
   gen_otp_url =
     'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd'
   
