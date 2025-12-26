@@ -185,7 +185,7 @@ etf_get <- function(x,
   
   ohlc$ema5<-EMA(ohlc$close,n=5)
   ohlc$ema20<-EMA(ohlc$close,n=20)
-  ohlc$ema20<-EMA(ohlc$close,n=50)
+  ohlc$ema50<-EMA(ohlc$close,n=50)
 
   ohlc$ema5diff<-ohlc$close-ohlc$ema5
   ohlc$ema20diff<-ohlc$close-ohlc$ema20
