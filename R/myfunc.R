@@ -459,7 +459,7 @@ add_bgdgs_sheet<-function(tgt_df,tgt_sht,cell_org){
 }
 
 
-ksky_lfcy <- function(ref_date,idx_fn){
+ksky_lfcy2 <- function(ref_date,th_date){
   sheet_num <- 'ksky_lfcy_viz'
   sheet_ema <- 'ksky_lfcy_ema'
   sheet_num_sep <- 'ksky_lfcy_viz_sep'
@@ -467,7 +467,7 @@ ksky_lfcy <- function(ref_date,idx_fn){
   start_date <- ref_date
   
   
-  idx_gs_lst <- read_gs_idx(idx_fn)
+  idx_gs_lst <- read_gs_idx('kr_idx')
   kweight_lst<-idx_gs_lst[[2]]
   
   ksmb_lst<-idx_gs_lst[[1]]
@@ -481,198 +481,383 @@ ksky_lfcy <- function(ref_date,idx_fn){
   
   
   ref_prices=lapply(ksmb_lst,function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir=ktickerData)[ref_date])))))
+  
+  th_prices=lapply(ksmb_lst,function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir=ktickerData)[th_date])))))
   ref_pf = mapply(function(X,Y){X/Y}, X=kweight_lst,Y=ref_prices,SIMPLIFY=F)
+  th_pf =  mapply(function(X,Y){X/Y}, X=kweight_lst,Y=th_prices,SIMPLIFY=F)
   #list close
   prices_run=lapply(ksmb_lst, function(x) do.call(cbind,lapply(x,function(x){print(x); coredata(Cl(get(x,envir = ktickerData)))})))
   #list separated jm
   prices_run_ind = mapply(function(X,Y,Z){ as.data.frame(sweep(X,2,Y,FUN="/")*100) %>% set_names(Z)},X=prices_run,Y=ref_prices,Z=ksmb_lst)
-  #array idx
+  prices_run_ind_th = mapply(function(X,Y,Z){ as.data.frame(sweep(X,2,Y,FUN="/")*100) %>% set_names(Z)},X=prices_run,Y=th_prices,Z=ksmb_lst)
+    #array idx
   prices_run_idx = mapply(function(X,Y){X %*% as.numeric(Y)},X=prices_run,Y=ref_pf)
+  
+  prices_run_th = mapply(function(X,Y){X %*% as.numeric(Y)},X=prices_run,Y=th_pf)
   #array sort
-  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=5)),decreasing = T)]
+  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=1)),decreasing = T)]
+  #price run with th_date
+  prices_run_th_sort<-prices_run_th[,order(colSums(tail(prices_run_th,n=1)),decreasing = T)]
   
   prun_idx_sort_ema5 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=5))
   prun_idx_sort_ema20 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=20))
   
+  diff_df5 = prices_run_idx_sort - prun_idx_sort_ema5
+  diff_df20 = prices_run_idx_sort - prun_idx_sort_ema20
+  
+  diffn_df5 = (diff_df5/prices_run_idx_sort)*100
+  diffn_df20 = (diff_df20/prices_run_idx_sort)*100
+  
+  
   #add EMA to index
   
-  colnames(prun_idx_sort_ema5)<-paste0(colnames(prun_idx_sort_ema5),'ema5')
-  colnames(prun_idx_sort_ema20)<-paste0(colnames(prun_idx_sort_ema20),'ema20')
-  df_temp <- bind_cols(prices_run_idx_sort,prun_idx_sort_ema5,prun_idx_sort_ema20)
+  colnames(diffn_df5)<-paste0(colnames(prun_idx_sort_ema5),'_diffn_ema5')
+  colnames(diffn_df20)<-paste0(colnames(prun_idx_sort_ema20),'_diffn_ema20')
+  
+  #calculate EMA with th
+  
+  prun_th_sort_ema5 <- apply(prices_run_th_sort,2, function(x) EMA(x,n=5))
+  prun_th_sort_ema20 <- apply(prices_run_th_sort,2, function(x) EMA(x,n=20))
+  
+  diff_th_df5 = prices_run_th_sort - prun_th_sort_ema5
+  diff_th_df20 = prices_run_th_sort - prun_th_sort_ema20
+  
+  diffn_th_df5 = (diff_th_df5/prices_run_th_sort)*100
+  diffn_th_df20 = (diff_th_df20/prices_run_th_sort)*100
+  
+  
+  #add EMA to index
+  
+  colnames(diffn_th_df5)<-paste0(colnames(prun_th_sort_ema5),'_diffn_ema5')
+  colnames(diffn_th_df20)<-paste0(colnames(prun_th_sort_ema20),'_diffn_ema20')
+  
+  
+  
+  df_temp <- bind_cols(prices_run_idx_sort,diffn_df5,diffn_df20)
+  df_temp_th <- bind_cols(prices_run_th_sort,diffn_th_df5,diffn_th_df20)
   df_reloc <- data.frame()
+  df_reloc_th <- data.frame()
   
   col_len<-dim(prices_run_idx_sort)[2]
   
+  #dataframe for diffn_ema5 diffn_ema20 from ref_date
   for (i in 1:col_len) {
     if(i==1) df_reloc <- df_temp[,c(i,i+col_len,i+col_len*2)]
     else    df_reloc<-data.frame(df_reloc,df_temp[,c(i,i+col_len,i+col_len*2)])
   }
   
+  for (i in 1:col_len) {
+    if(i==1) df_reloc_th <- df_temp_th[,c(i,i+col_len,i+col_len*2)]
+    else    df_reloc_th <-data.frame(df_reloc_th,df_temp_th[,c(i,i+col_len,i+col_len*2)])
+  }
+  
+  
+  
   #bind idx and ind jm
-  sector_rank <- order(colSums(tail(prices_run_idx,n=5)),decreasing = T)
+  sector_rank <- order(colSums(tail(prices_run_idx,n=1)),decreasing = T)
   df_idx_ind <- data.frame()
   
   for (i in 1:col_len) {
     ind_df<- prices_run_ind[[sector_rank[i]]]
-    ind_df_order <- order(colSums(tail(ind_df[,-1],n=5)),decreasing = T)
-    ind_df_order <- ind_df_order+1
+    ind_df_order <- order(colSums(tail(ind_df,n=1)),decreasing = T)
     ind_df_sort <-ind_df[,ind_df_order]
-    ind_king<-data.frame(ind_df[,1])
-    colnames(ind_king) <- colnames(ind_df)[1]
-    if(i==1) df_idx_ind <- data.frame(df_temp[,i],data.frame(ind_king,ind_df_sort[,1:3]))
-    else    df_idx_ind<-data.frame(df_idx_ind,df_temp[,i],data.frame(ind_king,ind_df_sort[,1:3]))
+
+
+    if(i==1) df_idx_ind <- data.frame(df_temp[,i],data.frame(ind_df_sort[,1:4]))
+    else    df_idx_ind<-data.frame(df_idx_ind,df_temp[,i],data.frame(ind_df_sort[,1:4]))
+    
   }
+  
+  df_idx_ind_th <- data.frame()
+  sector_rank <- order(colSums(tail(prices_run_th,n=1)),decreasing = T)
+  
+  for (i in 1:col_len) {
+    ind_df<- prices_run_ind_th[[sector_rank[i]]]
+    ind_df_order <- order(colSums(tail(ind_df,n=1)),decreasing = T)
+    ind_df_sort <-ind_df[,ind_df_order]
+    print(i)
+    if(i==1) df_idx_ind_th <- data.frame(df_temp_th[,i],data.frame(ind_df_sort[,1:4]))
+    else    df_idx_ind_th<-data.frame(df_idx_ind_th,df_temp_th[,i],data.frame(ind_df_sort[,1:4]))
+    
+  }
+  
+  
   
   prices_run.xts <-xts(prices_run_idx_sort,index(get(ksmb_lst[[1]][1],envir=ktickerData)))[paste0(ref_date,'::')]
   
+  prices_run_th.xts <- xts(df_reloc_th,index(get(ksmb_lst[[1]][1],envir=ktickerData)))
+  
+  prices_run_th.xts <- prices_run_th.xts[paste0(th_date,'/')]
   
   #colnames(prices_run.xts)<- names(ksmb_lst)
   prices_run.df<-data.frame(date=index(prices_run.xts),coredata(prices_run.xts))
   
-  #prun_ema.df<-data.frame(date=index(tail(prices_run.xts,20)),tail(df_reloc,20))
-
+  #price run 
   prun_ema.df<-data.frame(date=index(prices_run.xts),coredata(df_reloc))
-
-    prun_ema_diff.df <- prun_ema.df
-
-  for (i in seq(2, (dim(prun_ema_diff.df)[2]-1)/3, by = 3)) {
-    close_col <- i
-    ema5_col  <- i + 1
-    ema20_col <- i + 2
   
-    prun_ema_diff.df[,ema5_col]  <- prun_ema_diff.df[[close_col]] - prun_ema_diff.df[[ema5_col]]
-    prun_ema_diff.df[,ema20_col] <- prun_ema_diff.df[[close_col]] - prun_ema_diff.df[[ema20_col]]
-  }
+  prun_ema_th.df<-data.frame(date=index(prices_run_th.xts),coredata(prices_run_th.xts))
+  
+  prun_idx_ind_th_xts <- xts(df_idx_ind_th,index(prices_run.xts))
+  
+  prun_idx_ind_th_df <- data.frame(date=index(prun_idx_ind_th_xts[paste0(th_date,'/')]),
+                                   coredata(prun_idx_ind_th_xts[paste0(th_date,'/')]))
 
   
+
   prun_idx_ind_df <- data.frame(date=index(prices_run.xts),df_idx_ind)
-  
-  prun_idx_ind_df <- data.frame(date=index(prices_run.xts),df_idx_ind)
-  
+  prun_idx_ind_th_xts <- xts(df_idx_ind_th,index(prices_run.xts))
+
   gs4_auth(email = "coatle0@gmail.com")
   ssid <- "1Edz1EPV6hqBM2tMKSkA3zNmysmugMrAg1u2H3fheXaM"
   range_clear(ssid,sheet=sheet_num)
   range_write(ssid,prices_run.df,range="A1",col_names = TRUE,sheet = sheet_num)
-  range_clear(ssid,sheet=sheet_num,range="I1:AZ250")
+  range_clear(ssid,sheet=sheet_num,range="I1:BO250")
   range_write(ssid,prun_ema.df,range="I1",col_names = TRUE,sheet = sheet_num)
-  range_clear(ssid,sheet=sheet_ema)
   
-  range_write(ssid,prun_ema_diff.df,range="A1",col_names = TRUE,sheet = sheet_ema)
-
-
+  range_clear(ssid,sheet=sheet_ema)
+  range_write(ssid,prun_ema_th.df,range="A1",col_names = TRUE,sheet = sheet_ema)
+  
+  
   
   range_clear(ssid,sheet=sheet_num_sep)
   range_write(ssid,prun_idx_ind_df,range="A1",col_names = TRUE,sheet = sheet_num_sep)
   
   range_clear(ssid,sheet=sheet_num_sep2)
-  range_write(ssid,tail(prun_idx_ind_df,n=20),range="A1",col_names = TRUE,sheet = sheet_num_sep2)
-
+  range_write(ssid,prun_idx_ind_th_df,range="A1",col_names = TRUE,sheet = sheet_num_sep2)
+  
 }
-
 
 #function for usky update
 
-usky_lfcy <- function(ref_date,idx_fn){
-  sheet_num <- 'usky_lfcy_viz'
-  sheet_ema <- 'usky_lfcy_ema'
-  sheet_num_sep <- 'usky_lfcy_viz_sep'
-  sheet_num_sep2 <- 'usky_lfcy_viz_sep2'
-  start_date <- ref_date
+
+usky_lfcy2 <- function(ref_date,th_date){
   
-  
+  idx_fn <- 'us_idx'
+  #read idx and weight
   idx_gs_lst <- read_gs_idx(idx_fn)
   weight_lst<-idx_gs_lst[[2]]
-
-  smb_lst<-idx_gs_lst[[1]]
-
-  db_xts<-lapply(smb_lst,function(x) getSymbols(x[!(x %in% ls(envir=tickerData))],src='yahoo',env=tickerData,from=ref_date))
-
   
-  ref_prices=lapply(smb_lst,function(x) do.call(cbind,lapply(x,function(x) coredata(Ad(get(x,envir=tickerData)[ref_date])))))
+  smb_lst<-idx_gs_lst[[1]]
+  
+  fetch_yahoo_safe <- function(tickers, st_date, env) {
+    failed <- character(0)
+    
+    for (tkr in unique(tickers)) {
+      print(tkr)
+      
+      ok <- tryCatch({
+        suppressWarnings(
+          getSymbols(Symbols = tkr, src = "yahoo", from = st_date , env = env, auto.assign = TRUE)
+        )
+        TRUE
+      }, error = function(e) FALSE)
+      
+      if (!ok) failed <- c(failed, tkr)
+    }
+    
+    list(failed = unique(failed))
+  }
+  #get ohlc from yahoo with ticker check
+  failed_tickers = fetch_yahoo_safe(unlist(smb_lst),ref_date,tickerData)
+  failed_tickers <- failed_tickers$failed
+  
+  if (length(failed_tickers) > 0) {
+    message(
+      "[fetch_yahoo_safe] failed tickers: ",
+      paste(failed_tickers, collapse = ", ")
+    )
+  }
+  
+  #휴일일 경우 다음번 첫 거래일 사용
+  get_common_ref_trade_date <- function(ref_date, env=tickerData) {
+    # 아무 xts 하나만 써도 됨 (공통 캘린더 가정)
+    sample_tkr <- ls(envir = env)[1]
+    x <- get(sample_tkr, envir = env)
+    
+    idx <- index(x)
+    d <- idx[idx >= as.Date(ref_date)]
+    
+    if (length(d) == 0) return(NA)
+    d[1]
+  }
+  ref_trade_date <- get_common_ref_trade_date(ref_date, tickerData)
+  th_trade_date <- get_common_ref_trade_date(th_date, tickerData)
+  
+  is_new_ipo <- function(tkr, ref_trade_date, env = tickerData) {
+    # 1) 아예 데이터 객체가 없는 경우
+    if (!exists(tkr, envir = env)) return(TRUE)
+    
+    x <- get(tkr, envir = env)
+    
+    # 2) 공통 기준 거래일에 row 자체가 없는 경우
+    if (NROW(x[ref_trade_date]) == 0) return(TRUE)
+    
+    # 3) 값은 있는데 가격이 NA인 경우
+    px <- as.numeric(Ad(x[ref_trade_date]))
+    if (is.na(px)) return(TRUE)
+    
+    FALSE
+  }
+  
+  #신규 IPO 종목 걸러내기기
+  detect_new_ipo <- function(smb_lst, ref_trade_date, env=tickerData) {
+    res <- list()
+    
+    for (i in seq_along(smb_lst)) {
+      sector <- names(smb_lst)[i]
+      tickers <- smb_lst[[i]]
+      
+      flag <- sapply(tickers, is_new_ipo,
+                     ref_trade_date = ref_trade_date,
+                     env = env)
+      
+      if (any(flag)) {
+        res[[sector]] <- tickers[flag]
+      }
+    }
+    
+    res
+  }
+  new_ipo_map <- detect_new_ipo(smb_lst, ref_trade_date, tickerData)
+  
+  if (length(new_ipo_map) > 0) {
+    message("🚨 신규 IPO / 기준일 데이터 미존재 종목 발견")
+    
+    for (s in names(new_ipo_map)) {
+      message(" - [", s, "] ", paste(new_ipo_map[[s]], collapse = ", "))
+    }
+    
+    stop("⛔ smb_lst를 수정한 뒤 다시 실행하세요.")
+  }
+  
+  ref_prices=lapply(smb_lst,function(x) do.call(cbind,lapply(x,function(x) coredata(Ad(get(x,envir=tickerData)[ref_trade_date])))))
+  th_prices=lapply(smb_lst,function(x) do.call(cbind,lapply(x,function(x) coredata(Ad(get(x,envir=tickerData)[th_trade_date])))))
   ref_pf = mapply(function(X,Y){X/Y}, X=weight_lst,Y=ref_prices)
-
+  th_pf = mapply(function(X,Y){X/Y}, X=weight_lst,Y=th_prices)
+  
   #list close
   prices_run=lapply(smb_lst, function(x) do.call(cbind,lapply(x,function(x){ print(x);coredata(Ad(get(x,envir = tickerData)))})))
   #list separated jm
   prices_run_ind = mapply(function(X,Y,Z){ as.data.frame(sweep(X,2,Y,FUN="/")*100) %>% set_names(Z)},X=prices_run,Y=ref_prices,Z=smb_lst)
+  prices_run_ind_th = mapply(function(X,Y,Z){ as.data.frame(sweep(X,2,Y,FUN="/")*100) %>% set_names(Z)},X=prices_run,Y=th_prices,Z=smb_lst)
+  
   #array idx
   prices_run_idx = mapply(function(X,Y){ print(dim(X)); X %*% as.numeric(Y)},X=prices_run,Y=ref_pf)
-  #array sort
-  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=5)),decreasing = T)]
+  prices_run_th = mapply(function(X,Y){ print(dim(X)); X %*% as.numeric(Y)},X=prices_run,Y=th_pf)
   
+  
+  #array sort
+  prices_run_idx_sort<-prices_run_idx[,order(colSums(tail(prices_run_idx,n=1)),decreasing = T)]
+  
+  prices_run_th_sort<-prices_run_th[,order(colSums(tail(prices_run_th,n=1)),decreasing = T)]
+  
+  #cal ema for idx
   prun_idx_sort_ema5 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=5))
   prun_idx_sort_ema20 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=20))
+  prun_idx_sort_ema50 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=50))
   
+  diffn_df5 <- ((prices_run_idx_sort-prun_idx_sort_ema5)/prun_idx_sort_ema5)*100
+  diffn_df20 <- ((prices_run_idx_sort-prun_idx_sort_ema20)/prun_idx_sort_ema5)*100
   #add EMA to index
   
-  colnames(prun_idx_sort_ema5)<-paste0(colnames(prun_idx_sort_ema5),'ema5')
-  colnames(prun_idx_sort_ema20)<-paste0(colnames(prun_idx_sort_ema20),'ema20')
-  df_temp <- bind_cols(prices_run_idx_sort,prun_idx_sort_ema5,prun_idx_sort_ema20)
+  colnames(diffn_df5)<-paste0(colnames(prun_idx_sort_ema5),'_diffn_ema5')
+  colnames(diffn_df20)<-paste0(colnames(prun_idx_sort_ema20),'_diffn_ema20')
+  
+  #cal ema for th
+  prun_th_sort_ema5 <- apply(prices_run_th_sort,2, function(x) EMA(x,n=5))
+  prun_th_sort_ema20 <- apply(prices_run_th_sort,2, function(x) EMA(x,n=20))
+  prun_th_sort_ema50 <- apply(prices_run_th_sort,2, function(x) EMA(x,n=50))
+  
+  diffn_df_th5 <- ((prices_run_th_sort-prun_th_sort_ema5)/prun_th_sort_ema5)*100
+  diffn_df_th20 <- ((prices_run_th_sort-prun_th_sort_ema20)/prun_th_sort_ema5)*100
+  #add EMA to index
+  
+  colnames(diffn_df_th5)<-paste0(colnames(prun_th_sort_ema5),'_diffn_ema5')
+  colnames(diffn_df_th20)<-paste0(colnames(prun_th_sort_ema20),'_diffn_ema20')
+  
+  df_temp <- bind_cols(prices_run_idx_sort,diffn_df5,diffn_df20)
+  df_temp_th <- bind_cols(prices_run_th_sort,diffn_df_th5,diffn_df_th20)
   df_reloc <- data.frame()
+  df_reloc_th <- data.frame()
   
   col_len<-dim(prices_run_idx_sort)[2]
   
+  #dataframe for diffn_ema5 diffn_ema20 from ref_date  
   for (i in 1:col_len) {
     if(i==1) df_reloc <- df_temp[,c(i,i+col_len,i+col_len*2)]
     else    df_reloc<-data.frame(df_reloc,df_temp[,c(i,i+col_len,i+col_len*2)])
   }
   
+  for (i in 1:col_len) {
+    if(i==1) df_reloc_th <- df_temp_th[,c(i,i+col_len,i+col_len*2)]
+    else    df_reloc_th <-data.frame(df_reloc_th,df_temp_th[,c(i,i+col_len,i+col_len*2)])
+  }
+  
+  
   #bind idx and ind jm
-  sector_rank <- order(colSums(tail(prices_run_idx,n=5)),decreasing = T)
+  sector_rank <- order(colSums(tail(prices_run_idx,n=1)),decreasing = T)
   df_idx_ind <- data.frame()
   
   for (i in 1:col_len) {
     ind_df<- prices_run_ind[[sector_rank[i]]]
-    ind_df_order <- order(colSums(tail(ind_df[,-1],n=5)),decreasing = T)
-    ind_df_order <- ind_df_order+1
+    ind_df_order <- order(colSums(tail(ind_df,n=1)),decreasing = T)
     ind_df_sort <-ind_df[,ind_df_order]
-    ind_king<-data.frame(ind_df[,1])
-    colnames(ind_king) <- colnames(ind_df)[1]
-    if(i==1) df_idx_ind <- data.frame(df_temp[,i],data.frame(ind_king,ind_df_sort[,1:3]))
-    else    df_idx_ind<-data.frame(df_idx_ind,df_temp[,i],data.frame(ind_king,ind_df_sort[,1:3]))
+    
+    if(i==1) df_idx_ind <- data.frame(df_temp[,i],data.frame(ind_df_sort[,1:4]))
+    else    df_idx_ind<-data.frame(df_idx_ind,df_temp[,i],data.frame(ind_df_sort[,1:4]))
+    
+  }
+  sector_rank <- order(colSums(tail(prices_run_th,n=1)),decreasing = T)
+  df_idx_ind_th <- data.frame()
+  
+  for (i in 1:col_len) {
+    ind_df<- prices_run_ind_th[[sector_rank[i]]]
+    ind_df_order <- order(colSums(tail(ind_df,n=1)),decreasing = T)
+    ind_df_sort <-ind_df[,ind_df_order]
+    print(i)
+    if(i==1) df_idx_ind_th <- data.frame(df_temp_th[,i],data.frame(ind_df_sort[,1:4]))
+    else    df_idx_ind_th<-data.frame(df_idx_ind_th,df_temp_th[,i],data.frame(ind_df_sort[,1:4]))
+    
   }
   
+  
   prices_run.xts <-xts(prices_run_idx_sort,index(get(smb_lst[[1]][1],envir=tickerData)))[paste0(ref_date,'::')]
+  
+  prices_run_th.xts <- xts(df_reloc_th,index(get(smb_lst[[1]][1],envir=tickerData)))
+  
+  prices_run_th.xts <- prices_run_th.xts[paste0(th_date,'/')]
   
   
   #colnames(prices_run.xts)<- names(ksmb_lst)
   prices_run.df<-data.frame(date=index(prices_run.xts),coredata(prices_run.xts))
   
   #prun_ema.df<-data.frame(date=index(tail(prices_run.xts,20)),tail(df_reloc,20))
-  prun_ema.df<-data.frame(date=index(prices_run.xts,20),coredata(df_reloc))
-
-  prun_ema_diff.df <- prun_ema.df
-
-  for (i in seq(2, (dim(prun_ema_diff.df)[2]-1)/3, by = 3)) {
-    close_col <- i
-    ema5_col  <- i + 1
-    ema20_col <- i + 2
+  prun_ema.df<-data.frame(date=index(prices_run.xts),coredata(df_reloc))
   
-    prun_ema_diff.df[,ema5_col]  <- prun_ema_diff.df[[close_col]] - prun_ema_diff.df[[ema5_col]]
-    prun_ema_diff.df[,ema20_col] <- prun_ema_diff.df[[close_col]] - prun_ema_diff.df[[ema20_col]]
-  }
-
-
-
-  prun_idx_ind_df <- data.frame(date=index(prices_run.xts),df_idx_ind)
+  prun_ema_th.df<-data.frame(date=index(prices_run_th.xts),coredata(prices_run_th.xts))
+  
+  
   
   prun_idx_ind_df <- data.frame(date=index(prices_run.xts),df_idx_ind)
+  prun_idx_ind_th_xts <- xts(df_idx_ind_th,index(prices_run.xts))
+  prun_idx_ind_th_df <- data.frame(date=index(prun_idx_ind_th_xts[paste0(th_date,'/')]),
+                                   coredata(prun_idx_ind_th_xts[paste0(th_date,'/')]))
   
   gs4_auth(email = "coatle0@gmail.com")
   ssid <- "1Edz1EPV6hqBM2tMKSkA3zNmysmugMrAg1u2H3fheXaM"
-  range_clear(ssid,sheet=sheet_num)
-  range_write(ssid,prices_run.df,range="A1",col_names = TRUE,sheet = sheet_num)
-  range_clear(ssid,sheet=sheet_num,range="I1:AZ200")
-  range_write(ssid,prun_ema.df,range="I1",col_names = TRUE,sheet = sheet_num)
-  range_clear(ssid,sheet=sheet_ema)
-
-  range_write(ssid,prun_ema_diff.df,range="A1",col_names = TRUE,sheet = sheet_ema)
-  range_clear(ssid,sheet=sheet_num_sep)
-  range_write(ssid,prun_idx_ind_df,range="A1",col_names = TRUE,sheet = sheet_num_sep)
   
-  range_clear(ssid,sheet=sheet_num_sep2)
-  range_write(ssid,tail(prun_idx_ind_df,n=20),range="A1",col_names = TRUE,sheet = sheet_num_sep2)
-
+  write_sggs_sheet(prices_run.df,'usky_lfcy_viz','A1')
+  
+  range_clear(ssid,sheet=sheet_num,range="I1:AZ200")
+  
+  add_sggs_sheet(prun_ema.df,'usky_lfcy_viz','I1')
+  
+  write_sggs_sheet(prun_ema_th.df,'usky_lfcy_ema','A1')
+  
+  write_sggs_sheet(prun_idx_ind_df,'usky_lfcy_viz_sep','A1')
+  write_sggs_sheet(prun_idx_ind_th_df,'usky_lfcy_viz_sep2','A1')
+  
+  
 }
 
 
