@@ -848,7 +848,7 @@ usky_lfcy2 <- function(ref_date,th_date){
   
   write_sggs_sheet(prices_run.df,'usky_lfcy_viz','A1')
   
-  range_clear(ssid,sheet=sheet_num,range="I1:AZ200")
+  range_clear(ssid,sheet='usky_lfcy_viz',range="I1:AZ200")
   
   add_sggs_sheet(prun_ema.df,'usky_lfcy_viz','I1')
   
