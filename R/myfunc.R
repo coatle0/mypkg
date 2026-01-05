@@ -5,6 +5,8 @@ library(tibble)
 library(telegram.bot)
 library(xml2)
 library(purrr)
+library(dplyr)
+library(jsonlite)
 
 bot=Bot(token=Sys.getenv("telegram_bot_token"))
 kw_bot=Bot(token=Sys.getenv("telegram_kw_token"))
