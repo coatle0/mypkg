@@ -18,34 +18,109 @@ tele_kwbot_send<-function(send_msg){
 }
 
 
+#parse KRX
+
+`%||%` <- function(x, y) if (is.null(x) || length(x) == 0) y else x
+
+parse_krx_response <- function(res) {
+  ct  <- headers(res)[["content-type"]] %||% ""
+  txt <- content(res, as = "text", encoding = "UTF-8")
+  
+  # JSON
+  if (grepl("json", ct, ignore.case = TRUE)) {
+    js <- fromJSON(txt, simplifyVector = TRUE)
+    return(as_tibble(js$OutBlock_1))
+  }
+  
+  # XML
+  if (grepl("xml", ct, ignore.case = TRUE) || grepl("^\\s*<\\?xml", txt)) {
+    doc <- read_xml(txt)
+    nodes <- xml_find_all(doc, ".//OutBlock_1")
+    
+    rows <- map(nodes, function(n) {
+      kids <- xml_children(n)
+      as.list(setNames(xml_text(kids), xml_name(kids)))
+    })
+    return(bind_rows(rows))
+  }
+  
+  stop("Unknown response format")
+}
+
+fetch_market_bydd <- function(basDd, market,
+                              auth_key,
+                              base_url = "https://data-dbg.krx.co.kr/svc/apis/") {
+  
+  api_id <- switch(
+    market,
+    KOSPI  = "sto/stk_bydd_trd",
+    KOSDAQ = "sto/ksq_bydd_trd",
+    ETF    = "etp/etf_bydd_trd",
+    stop("Unknown market")
+  )
+  
+  url <- paste0(base_url, "/", api_id)
+  
+  res <- GET(
+    url,
+    query = list(basDd = basDd),
+    add_headers(AUTH_KEY = auth_key),
+    user_agent("Mozilla/5.0"),
+    timeout(20)
+  )
+  
+  stop_for_status(res)
+  
+  df <- parse_krx_response(res)
+  
+  if (nrow(df) == 0) return(tibble())
+  
+  df %>%
+    mutate(
+      MARKET = market,
+      BAS_DD = basDd
+    )
+}
+
 #function for jm_code get
 code_get<-function(){
-  gen_otp_url =
-    'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd'
+  auth_key <- "8F3C1451B12547D3B544D148371C69E0ED63FAA6"
+  start_lag = 1     # 오늘 기준 몇 일 전부터 시작할지
+  max_lookback = 10 # 최대 몇 일 전까지 시도할지 (무한루프 방지)
+  markets <- c("KOSPI", "KOSDAQ", "ETF")
   
-  down_url = 'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd'
-  url_jmcode = 'dbms/MDC/STAT/standard/MDCSTAT01901'
+  for (i in 0:max_lookback) {
+    
+    basDd <- format(Sys.Date() - (start_lag + i), "%Y%m%d")
+    message("Trying basDd = ", basDd)
+    
+    raw_all <- bind_rows(
+      lapply(markets, function(mkt) {
+        message("  Fetching ", mkt)
+        fetch_market_bydd(basDd, mkt, auth_key)
+      })
+    )
+    
+    if (nrow(raw_all) > 0) {
+      message("✔ Success at basDd = ", basDd)
+      
+      symbol_list <- raw_all %>%
+        transmute(
+          market = MARKET,
+          name   = ISU_NM,
+          code   = ISU_CD,
+          scode   = ISU_CD,
+         
+        ) %>%
+        distinct()
+      
+      return(symbol_list)
+    }
+    
+    message("✘ No data at basDd = ", basDd)
+  }
   
-  otp_jm = list(
-    mktId = 'ALL',
-    share ='1',
-    csvxls_isNo = 'false',
-    name = 'fileDown',
-    url = url_jmcode
-  )
-  otp = POST(gen_otp_url, query = otp_jm) %>%
-    read_html() %>%
-    html_text()
-  
-  jm_code = POST(down_url, query = list(code = otp),
-                 add_headers(referer = gen_otp_url)) %>%
-    read_html(encoding = 'EUC-KR') %>%
-    html_text() %>%
-    read_csv(show_col_types = FALSE)
-    colnames(jm_code)<-c('code','scode','fname','name','ename','ipodate','market','stype','class','stype','unitp','issue')
-    jm_code <- cbind(jm_code$market, jm_code$name, jm_code$code,jm_code$scode)
-    colnames(jm_code)<-c('market','name','code','scode')
-  return(as_tibble(jm_code))
+  stop("No data found within lookback window (", max_lookback, " days)")
 }
 
 tqk_get <- function(x,
