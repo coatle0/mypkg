@@ -225,99 +225,111 @@ x_ohlc <- x_ohlc %>%
   )
 }
 
-#function for etf handling
-etfcode_get<-function(){
-  gen_otp_url =
-    'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd'
-  
-  down_url = 'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd'
-  
-  url_jmcode = 'dbms/MDC/STAT/standard/MDCSTAT04601'
-  
-  otp_jm = list(
-    locale = 'ko_KR',
-    share = '1',
-    csvxls_isNo = 'false',
-    name = 'fileDown',
-    url = url_jmcode
-  )
-  otp = POST(gen_otp_url, query = otp_jm) %>%
-    read_html() %>%
-    html_text()
-  
-  jm_code = POST(down_url, query = list(code = otp),
-                 add_headers(referer = gen_otp_url)) %>%
-    read_html(encoding = 'EUC-KR') %>%
-    html_text() %>%
-    read_csv(show_col_types = FALSE)
-  jm_code <- jm_code[,c(1:4,12)]
-  jm_code <- jm_code[,-3]
-  
-  colnames(jm_code)<-c('code','scode','name','asset')
-  
-  return(jm_code)
-}
-
-
 etf_get <- function(x,
                     from='2025-01-01') {
-  gen_otp_url =
-    'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd'
   
-  down_url = 'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd'
+  # --- 1) 전역 code DF에서 yhcode 찾기 ---
+  if (!exists("code", envir = .GlobalEnv)) {
+    stop("Global dataframe `code` does not exist.")
+  }
+  code_df <- get("code", envir = .GlobalEnv)
   
-  url_ohlc = 'dbms/MDC/STAT/standard/MDCSTAT04501' 
+  if (!all(c("code", "yhcode") %in% names(code_df))) {
+    stop("`code` must contain columns: code, yhcode")
+  }
   
-  otp_ohlc = list(
-    locale= 'ko_KR',
-    strtDd=gsub('-','',from),
-    endDd = gsub('-','',as.character(today())),
-    isuCd = x,
-    isuCd2 = 'KR7152100004',
-    tboxisuCd_finder_secuprodisu1_1 = '472350/1Q 차이나H(H)',
-    codeNmisuCd_finder_secuprodisu1_1 = '1Q 차이나H(H)',
-    juya='ALL',
-    rghtTpCd = 'T',
-    share= '1',
-    money= '1',
-    csvxls_isNo='false',
-    name='fileDown',
-    url= url_ohlc
-  )
-  otp = POST(gen_otp_url, query = otp_ohlc) %>%
-    read_html() %>%
-    html_text()
+  tgt_code <- as.character(tgt_code)
   
+  hit <- code_df[code_df$code == tgt_code, , drop = FALSE]
+  if (nrow(hit) == 0) stop("No match for tgt_code = ", tgt_code)
+  if (nrow(hit) > 1) stop("Multiple matches for tgt_code = ", tgt_code)
   
-  x_ohlc = POST(down_url, query = list(code = otp),
-                add_headers(referer = gen_otp_url)) %>%
-    read_html(encoding = 'EUC-KR') %>%
-    html_text() %>%
-    read_csv(show_col_types = FALSE)
+  yh <- hit$yhcode[[1]]
   
-  colnames(x_ohlc)<-c('date','close','chg','chgr','NAV','open','high','low','volume','volm')
-  ohlc <- x_ohlc[,c('date','open','high','low','close','volume','chgr')] %>%
-    arrange(date) %>% 
-    mutate(
-      chgrlow   = (low / lag(close)   - 1) * 100,  # 전일 Low 대비
-      chgropen = (open / lag(close) - 1) * 100,  # 전일 종가 대비
-      chgrhigh     = (open / lag(close)       - 1) * 100   # 당일 시가 대비
+  # --- 2) Yahoo에서 OHLC 가져오기 (xts) ---
+  xts_obj <- suppressWarnings(
+    quantmod::getSymbols(
+      Symbols = yh,
+      src = "yahoo",
+      from = from,
+      auto.assign = FALSE
     )
+  )
+  if (!inherits(xts_obj, "xts")) stop("Failed to fetch data for ", yh)
   
-  ohlc$ema5<-EMA(ohlc$close,n=5)
-  ohlc$ema20<-EMA(ohlc$close,n=20)
-  ohlc$ema50<-EMA(ohlc$close,n=50)
-
-  ohlc$ema5diff<-ohlc$close-ohlc$ema5
-  ohlc$ema20diff<-ohlc$close-ohlc$ema20
-  ohlc$ema50diff<-ohlc$close-ohlc$ema50
-
-  ohlc$ema5diffn<-ohlc$ema5diff/ohlc$close
-  ohlc$ema5diffn<-(ohlc$ema5diff/ohlc$close)*100
-  ohlc$ema20diffn<-(ohlc$ema20diff/ohlc$close)*100
-  ohlc$ema50diffn<-(ohlc$ema50diff/ohlc$close)*100
+  # --- 3) xts -> data.frame(x_ohlc) ---
+  x_ohlc <- data.frame(
+    date     = as.Date(zoo::index(xts_obj)),
+    open     = as.numeric(quantmod::Op(xts_obj)),
+    high     = as.numeric(quantmod::Hi(xts_obj)),
+    low      = as.numeric(quantmod::Lo(xts_obj)),
+    close    = as.numeric(quantmod::Cl(xts_obj)),
+    volume   = as.numeric(quantmod::Vo(xts_obj)),
+    adjusted = as.numeric(quantmod::Ad(xts_obj)),
+    stringsAsFactors = FALSE
+  )
   
-  return(ohlc)
+# 1) LOCF (앞으로)
+x_ohlc <- x_ohlc %>%
+  dplyr::mutate(
+    open   = zoo::na.locf(open,   na.rm = FALSE),
+    high   = zoo::na.locf(high,   na.rm = FALSE),
+    low    = zoo::na.locf(low,    na.rm = FALSE),
+    close  = zoo::na.locf(close,  na.rm = FALSE),
+    volume = zoo::na.locf(volume, na.rm = FALSE)
+  )
+
+# 2) NOCB (뒤로: 시작 구간 NA 메우기)
+x_ohlc <- x_ohlc %>%
+  dplyr::mutate(
+    open   = zoo::na.locf(open,   fromLast = TRUE, na.rm = FALSE),
+    high   = zoo::na.locf(high,   fromLast = TRUE, na.rm = FALSE),
+    low    = zoo::na.locf(low,    fromLast = TRUE, na.rm = FALSE),
+    close  = zoo::na.locf(close,  fromLast = TRUE, na.rm = FALSE),
+    volume = zoo::na.locf(volume, fromLast = TRUE, na.rm = FALSE)
+  )
+
+  
+  # --- 4) 네가 원한 "뒤처리" (chgr, pswing, nswing) ---
+  # 전일 close / 전일 high / 전일 low
+  pcl   <- dplyr::lag(x_ohlc$close)
+  phigh <- dplyr::lag(x_ohlc$high)
+  plow  <- dplyr::lag(x_ohlc$low)
+  
+  # chgr: 전일 close 대비 금일 close 변화율(%)
+  chgr <- round((x_ohlc$close / pcl - 1) * 100, 1)
+  
+  # pswing/nswing: 전일 close 대비 전일 high/low 스윙(%)
+  pswing <- round((phigh - pcl) / pcl * 100, 1)
+  nswing <- round((plow  - pcl) / pcl * 100, 1)
+  
+  # NA(첫 행) -> 0 처리
+  chgr[is.na(chgr)]     <- 0
+  pswing[is.na(pswing)] <- 0
+  nswing[is.na(nswing)] <- 0
+  
+  x_ohlc$chgr   <- chgr
+  x_ohlc$pswing <- pswing
+  x_ohlc$nswing <- nswing
+  
+  # --- 5) 반환 (네가 지정한 컬럼만 tibble) ---
+  tibble::as_tibble(
+    x_ohlc[, c("date", "open", "high", "low", "close", "volume", "chgr", "pswing", "nswing")]
+  )
+  x_ohlc$ema5<-EMA(x_ohlc$close,n=5)
+  x_ohlc$ema20<-EMA(x_ohlc$close,n=20)
+  x_ohlc$ema50<-EMA(x_ohlc$close,n=50)
+
+  x_ohlc$ema5diff<-x_ohlc$close-x_ohlc$ema5
+  x_ohlc$ema20diff<-x_ohlc$close-x_ohlc$ema20
+  x_ohlc$ema50diff<-x_ohlc$close-x_ohlc$ema50
+
+  x_ohlc$ema5diffn<-x_ohlc$ema5diff/x_ohlc$close
+  x_ohlc$ema5diffn<-(x_ohlc$ema5diff/x_ohlc$close)*100
+  x_ohlc$ema20diffn<-(x_ohlc$ema20diff/x_ohlc$close)*100
+  x_ohlc$ema50diffn<-(x_ohlc$ema50diff/x_ohlc$close)*100
+  
+  return(x_ohlc)
 }
 
 
