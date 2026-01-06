@@ -176,6 +176,27 @@ tqk_get <- function(tgt_code,
     stringsAsFactors = FALSE
   )
   
+# 1) LOCF (앞으로)
+x_ohlc <- x_ohlc %>%
+  dplyr::mutate(
+    open   = zoo::na.locf(open,   na.rm = FALSE),
+    high   = zoo::na.locf(high,   na.rm = FALSE),
+    low    = zoo::na.locf(low,    na.rm = FALSE),
+    close  = zoo::na.locf(close,  na.rm = FALSE),
+    volume = zoo::na.locf(volume, na.rm = FALSE)
+  )
+
+# 2) NOCB (뒤로: 시작 구간 NA 메우기)
+x_ohlc <- x_ohlc %>%
+  dplyr::mutate(
+    open   = zoo::na.locf(open,   fromLast = TRUE, na.rm = FALSE),
+    high   = zoo::na.locf(high,   fromLast = TRUE, na.rm = FALSE),
+    low    = zoo::na.locf(low,    fromLast = TRUE, na.rm = FALSE),
+    close  = zoo::na.locf(close,  fromLast = TRUE, na.rm = FALSE),
+    volume = zoo::na.locf(volume, fromLast = TRUE, na.rm = FALSE)
+  )
+
+  
   # --- 4) 네가 원한 "뒤처리" (chgr, pswing, nswing) ---
   # 전일 close / 전일 high / 전일 low
   pcl   <- dplyr::lag(x_ohlc$close)
