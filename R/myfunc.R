@@ -225,7 +225,7 @@ x_ohlc <- x_ohlc %>%
   )
 }
 
-etf_get <- function(x,
+etf_get <- function(tgt_code,
                     from='2025-01-01') {
   
   # --- 1) 전역 code DF에서 yhcode 찾기 ---
