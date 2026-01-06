@@ -86,10 +86,10 @@ fetch_market_bydd <- function(basDd, market,
 }
 
 #function for jm_code get
-code_get<-function(){
+code_get <- function() {
   auth_key <- "8F3C1451B12547D3B544D148371C69E0ED63FAA6"
-  start_lag = 1     # 오늘 기준 몇 일 전부터 시작할지
-  max_lookback = 10 # 최대 몇 일 전까지 시도할지 (무한루프 방지)
+  start_lag = 1
+  max_lookback = 10
   markets <- c("KOSPI", "KOSDAQ", "ETF")
   
   for (i in 0:max_lookback) {
@@ -97,7 +97,7 @@ code_get<-function(){
     basDd <- format(Sys.Date() - (start_lag + i), "%Y%m%d")
     message("Trying basDd = ", basDd)
     
-    raw_all <- bind_rows(
+    raw_all <- dplyr::bind_rows(
       lapply(markets, function(mkt) {
         message("  Fetching ", mkt)
         fetch_market_bydd(basDd, mkt, auth_key)
@@ -108,14 +108,20 @@ code_get<-function(){
       message("✔ Success at basDd = ", basDd)
       
       symbol_list <- raw_all %>%
-        transmute(
+        dplyr::transmute(
           market = MARKET,
           name   = ISU_NM,
           code   = ISU_CD,
-          scode   = ISU_CD,
-         
+          scode  = ISU_CD
         ) %>%
-        distinct()
+        dplyr::distinct() %>%
+        dplyr::mutate(
+          yhcode = dplyr::case_when(
+            market %in% c("KOSPI", "ETF") ~ paste0(scode, ".KS"),
+            market == "KOSDAQ"            ~ paste0(scode, ".KQ"),
+            TRUE                          ~ NA_character_
+          )
+        )
       
       return(symbol_list)
     }
@@ -126,62 +132,78 @@ code_get<-function(){
   stop("No data found within lookback window (", max_lookback, " days)")
 }
 
-tqk_get <- function(x,
-                    from='2025-01-01') {
-  gen_otp_url =
-    'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd'
+tqk_get <- function(tgt_code,
+                    from = "2025-01-01") {
   
-  down_url = 'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd'
-  url_jmcode = 'dbms/MDC/STAT/standard/MDCSTAT01901'
-
+  # --- 1) 전역 code DF에서 yhcode 찾기 ---
+  if (!exists("code", envir = .GlobalEnv)) {
+    stop("Global dataframe `code` does not exist.")
+  }
+  code_df <- get("code", envir = .GlobalEnv)
   
-  url_ohlc = 'dbms/MDC/STAT/standard/MDCSTAT01701' 
+  if (!all(c("code", "yhcode") %in% names(code_df))) {
+    stop("`code` must contain columns: code, yhcode")
+  }
   
-  otp_ohlc = list(
-    #tboxisuCd_finder_stkisu0_3 = '005930/�Ｚ����',
-    isuCd=x,
-    #isuCd2 = 'KR7005930003',
-    #codeNmisuCd_finder_stkisu0_3: �Ｚ����
-    #param1isuCd_finder_stkisu0_3: ALL
-    strtDd=gsub('-','',from),
-    endDd=format(Sys.Date(),'%Y%m%d'),
-    adjStkPrc_check='Y',
-    adjStkPrc='2',
-    share= '1',
-    money= '1',
-    csvxls_isNo='false',
-    name='fileDown',
-    url= url_ohlc
+  tgt_code <- as.character(tgt_code)
+  
+  hit <- code_df[code_df$code == tgt_code, , drop = FALSE]
+  if (nrow(hit) == 0) stop("No match for tgt_code = ", tgt_code)
+  if (nrow(hit) > 1) stop("Multiple matches for tgt_code = ", tgt_code)
+  
+  yh <- hit$yhcode[[1]]
+  
+  # --- 2) Yahoo에서 OHLC 가져오기 (xts) ---
+  xts_obj <- suppressWarnings(
+    quantmod::getSymbols(
+      Symbols = yh,
+      src = "yahoo",
+      from = from,
+      auto.assign = FALSE
+    )
   )
-  otp = POST(gen_otp_url, query = otp_ohlc) %>%
-    read_html() %>%
-    html_text()
+  if (!inherits(xts_obj, "xts")) stop("Failed to fetch data for ", yh)
   
+  # --- 3) xts -> data.frame(x_ohlc) ---
+  x_ohlc <- data.frame(
+    date     = as.Date(zoo::index(xts_obj)),
+    open     = as.numeric(quantmod::Op(xts_obj)),
+    high     = as.numeric(quantmod::Hi(xts_obj)),
+    low      = as.numeric(quantmod::Lo(xts_obj)),
+    close    = as.numeric(quantmod::Cl(xts_obj)),
+    volume   = as.numeric(quantmod::Vo(xts_obj)),
+    adjusted = as.numeric(quantmod::Ad(xts_obj)),
+    stringsAsFactors = FALSE
+  )
   
-  x_ohlc = POST(down_url, query = list(code = otp),
-                 add_headers(referer = gen_otp_url)) %>%
-    read_html(encoding = 'EUC-KR') %>%
-    html_text() %>%
-    read_csv(show_col_types = FALSE)
+  # --- 4) 네가 원한 "뒤처리" (chgr, pswing, nswing) ---
+  # 전일 close / 전일 high / 전일 low
+  pcl   <- dplyr::lag(x_ohlc$close)
+  phigh <- dplyr::lag(x_ohlc$high)
+  plow  <- dplyr::lag(x_ohlc$low)
   
-  colnames(x_ohlc)<-c('date','close','chg','chgr','open','high','low','volume','volm','mcap','issue')
-  #x_ohlc_tmp <- cbind(x_ohlc$open,x_ohlc$high,x_ohlc$low,x_ohlc$close,x_ohlc$volume,x_ohlc$chgr)
-  #colnames(x_ohlc_tmp)<-c('open','high','low','close','volume','chgr')
-  pcl<-x_ohlc$close[-1]
-  df_len<-length(x_ohlc$close)
-  chigh<-x_ohlc$high[-df_len]
-  clow <- x_ohlc$low[-df_len]
-
-  pswing <- (chigh-pcl)/pcl
-  pswing <- as.numeric(format(pswing * 100,digits=1))
-  x_ohlc$pswing <- c(pswing,0)
-
-  nswing <- (clow-pcl)/pcl
-  nswing <- as.numeric(format(nswing * 100,digits=1))
-  x_ohlc$nswing <- c(nswing,0)
+  # chgr: 전일 close 대비 금일 close 변화율(%)
+  chgr <- round((x_ohlc$close / pcl - 1) * 100, 1)
   
-  return(as_tibble(x_ohlc[,c('date','open','high','low','close','volume','chgr','pswing','nswing')]))
+  # pswing/nswing: 전일 close 대비 전일 high/low 스윙(%)
+  pswing <- round((phigh - pcl) / pcl * 100, 1)
+  nswing <- round((plow  - pcl) / pcl * 100, 1)
+  
+  # NA(첫 행) -> 0 처리
+  chgr[is.na(chgr)]     <- 0
+  pswing[is.na(pswing)] <- 0
+  nswing[is.na(nswing)] <- 0
+  
+  x_ohlc$chgr   <- chgr
+  x_ohlc$pswing <- pswing
+  x_ohlc$nswing <- nswing
+  
+  # --- 5) 반환 (네가 지정한 컬럼만 tibble) ---
+  tibble::as_tibble(
+    x_ohlc[, c("date", "open", "high", "low", "close", "volume", "chgr", "pswing", "nswing")]
+  )
 }
+
 #function for etf handling
 etfcode_get<-function(){
   gen_otp_url =
