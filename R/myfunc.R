@@ -20,6 +20,21 @@ tele_kwbot_send<-function(send_msg){
   kw_bot$sendMessage(chat_id = chat_id, text = send_msg)
 }
 
+#cal Ema input xts output xts
+cal_ema.xts <- function(ohlc.xts) {
+  ohlc.xts$ema5<-EMA(ohlc.xts$close,n=5)
+  ohlc.xts$ema20<-EMA(ohlc.xts$close,n=20)
+  ohlc.xts$ema50<-EMA(ohlc.xts$close,n=50)
+  ohlc.xts$ema5diff<-ohlc.xts$close-ohlc.xts$ema5
+  ohlc.xts$ema20diff<-ohlc.xts$close-ohlc.xts$ema20
+  ohlc.xts$ema50diff<-ohlc.xts$close-ohlc.xts$ema50
+  
+  ohlc.xts$ema5diffn<-(ohlc.xts$ema5diff/ohlc.xts$close)*100
+  ohlc.xts$ema20diffn<-(ohlc.xts$ema20diff/ohlc.xts$close)*100
+  ohlc.xts$ema50diffn<-(ohlc.xts$ema50diff/ohlc.xts$close)*100
+  
+  return(ohlc.xts)
+}
 
 #parse KRX
 
