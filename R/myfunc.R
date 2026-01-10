@@ -20,7 +20,10 @@ tele_kwbot_send<-function(send_msg){
   kw_bot$sendMessage(chat_id = chat_id, text = send_msg)
 }
 
-#cal Ema input xts output xts
+
+
+
+#cal Ema input xts output xts for kindx
 cal_ema.xts <- function(ohlc.xts) {
   ohlc.xts$ema5<-EMA(ohlc.xts$close,n=5)
   ohlc.xts$ema20<-EMA(ohlc.xts$close,n=20)
@@ -35,6 +38,25 @@ cal_ema.xts <- function(ohlc.xts) {
   
   return(ohlc.xts)
 }
+
+#cal Ema input xts output xts for uidx
+cal_ema.uxts <- function(ohlc.xts) {
+  ohlc.xts$ema5<-EMA(Cl(ohlc.xts),n=5)
+  ohlc.xts$ema20<-EMA(Cl(ohlc.xts),n=20)
+  ohlc.xts$ema50<-EMA(Cl(ohlc.xts),n=50)
+  ohlc.xts$ema5diff<-Cl(ohlc.xts)-ohlc.xts$ema5
+  ohlc.xts$ema20diff<-Cl(ohlc.xts)-ohlc.xts$ema20
+  ohlc.xts$ema50diff<-Cl(ohlc.xts)-ohlc.xts$ema50
+  
+  ohlc.xts$ema5diffn<-(ohlc.xts$ema5diff/Cl(ohlc.xts))*100
+  ohlc.xts$ema20diffn<-(ohlc.xts$ema20diff/Cl(ohlc.xts))*100
+  ohlc.xts$ema50diffn<-(ohlc.xts$ema50diff/Cl(ohlc.xts))*100
+  
+  
+  return(ohlc.xts)
+}
+
+
 
 #parse KRX
 
@@ -347,7 +369,50 @@ x_ohlc <- x_ohlc %>%
   return(x_ohlc)
 }
 
-
+#input rank, read idx_fn reorder based on sector_rank.
+reorder_gs_sheet <- function(idx_fn, sector_rank) {
+  df<- read_sggs_sheet(idx_fn)
+  
+  # 2. 컬럼명 분석
+  all_cols <- names(df)
+  # _idx로 끝나는 컬럼만 추출하여 섹터의 기준 순서(Base)를 잡음
+  idx_cols <- grep("_idx$", all_cols, value = TRUE)
+  
+  # [검증] 랭크 개수와 섹터 개수 일치 확인
+  if(length(idx_cols) != length(sector_rank)) {
+    warning(paste("SKIP Reorder: Sector count mismatch. Sheet:", length(idx_cols), "Rank:", length(sector_rank)))
+    return(NULL)
+  }
+  
+  # 3. 현재 시트에 있는 섹터 이름들 추출 (예: "IT_idx" -> "IT")
+  # 순서는 현재 시트의 컬럼 순서를 따름
+  current_base_names <- sub("_idx$", "", idx_cols)
+  
+  # 4. 랭크 적용하여 새로운 섹터 순서 결정
+  # sector_rank가 [3, 1, 2]라면, 3번째 섹터가 맨 앞으로 옴
+  ordered_base_names <- current_base_names[sector_rank]
+  
+  # 5. 전체 컬럼 재배열 리스트 생성
+  # _idx, _wt 뿐만 아니라 _ref 등 해당 섹터 접두어를 가진 모든 컬럼을 한 뭉치로 이동
+  new_col_order <- c()
+  for(base in ordered_base_names) {
+    # 해당 섹터 이름으로 시작하는 모든 컬럼 찾기 (예: IT_idx, IT_wt, IT_ref...)
+    # ^Base_ 패턴 사용으로 정확도 향상
+    pattern <- paste0("^", base, "_")
+    related_cols <- grep(pattern, all_cols, value = TRUE)
+    new_col_order <- c(new_col_order, related_cols)
+  }
+  
+  # 6. 데이터프레임 재정렬
+  df_sorted <- df %>% select(all_of(new_col_order))
+  
+  # 7. 시트에 쓰기
+  # 기존 데이터 영역을 완전히 덮어쓰도록 A1부터 기록
+  # NA는 빈 셀로 기록되어 이전 데이터 잔여물을 지움
+  write_sggs_sheet(df_sorted,idx_fn,'A1')
+  
+  message(paste0("Success: Reordered '", idx_fn, "' columns based on rank."))
+}
 
 
 code<-code_get()
@@ -1149,14 +1214,19 @@ update_myidx <- function(kidx_start,data_start,qtr_start,week_start){
   idx_fn = "kr_idx"
   update_ksep(ref_date,sheet_num,idx_fn,data_start,sector_rank)
 
-  #update lib quarterly idx
+  #reorder kr_idx based on sector_rank calculation
+  reorder_gs_sheet('kr_idx',sector_rank)
+
+
+  #update zg quarterly idx
   sheet_num = 'zg_idx'
   start_date <- data_start
   ref_date = week_start
   idx_fn = "zg_sub_idx"
   sector_rank<-update_kidx(ref_date,sheet_num,idx_fn,data_start)
+  reorder_gs_sheet('zg_sub_idx',sector_rank)
 
-  #update lib sep chart quarter
+  #update zg sep chart quarter
   sheet_num = 'zg_sep_w'
   start_date <- data_start
   ref_date = week_start
@@ -1169,7 +1239,7 @@ update_myidx <- function(kidx_start,data_start,qtr_start,week_start){
   ref_date = week_start
   idx_fn = "semi_sub_idx"
   sector_rank<-update_kidx(ref_date,sheet_num,idx_fn,data_start)
-
+  reorder_gs_sheet('semi_sub_idx',sector_rank)
 
   #update semi sep weekly
   sheet_num = 'semi_sep_w'
@@ -1333,6 +1403,7 @@ update_myuidx<-function(qtr_ref_date,week_ref_date,idx_fn){
   sector_rank<-update_uidx(qtr_ref_date,"Uindex-Q",idx_fn)
   sector_rank<-update_uidx(week_ref_date,"Uindex-W",idx_fn)
   update_usep(week_ref_date,"Uindex_sep1",idx_fn,sector_rank)
+  reorder_gs_sheet('us_idx',sector_rank)
 }
 
 
