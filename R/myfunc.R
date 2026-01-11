@@ -260,6 +260,7 @@ x_ohlc <- x_ohlc %>%
   tibble::as_tibble(
     x_ohlc[, c("date", "open", "high", "low", "close", "volume", "chgr", "pswing", "nswing")]
   )
+  print(dim(x_ohlc))
 }
 
 etf_get <- function(tgt_code,
