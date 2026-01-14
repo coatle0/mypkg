@@ -1590,6 +1590,10 @@ cal_5m_idx<- function(){
   tgt_name_sort_update<-data.frame(time=tail(prices_run.df$time,n=1),t(colnames(prices_run.df)[2:dim(prices_run.df)[2]]))
   tgt_name_sort <- rbind(tgt_name_sort,tgt_name_sort_update)
   write_rtgs_sheet(tgt_name_sort,'fm_rt_name','A1')
+
+  write.csv(tgt_name_sort, file = paste0('rt_name',today_str,".csv"))
+
+
   assign('tgt_name_sort',tgt_name_sort,envir=.GlobalEnv)
   save.image(file=paste0(wd_str,"vmonGlobal.RData"))
 
