@@ -1591,7 +1591,7 @@ cal_5m_idx<- function(){
   tgt_name_sort <- rbind(tgt_name_sort,tgt_name_sort_update)
   write_rtgs_sheet(tgt_name_sort,'fm_rt_name','A1')
 
-  write.csv(tgt_name_sort, file = paste0('rt_name',today_str,".csv"))
+  write.csv(tgt_name_sort, file = paste0('rt_name',today_str,".csv"),row.names=FALSE)
 
 
   assign('tgt_name_sort',tgt_name_sort,envir=.GlobalEnv)
