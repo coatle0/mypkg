@@ -371,49 +371,64 @@ x_ohlc <- x_ohlc %>%
   return(x_ohlc)
 }
 
-#input rank, read idx_fn reorder based on sector_rank.
 reorder_gs_sheet <- function(idx_fn, sector_rank) {
-  df<- read_sggs_sheet(idx_fn)
-  
-  # 2. 컬럼명 분석
+  df <- read_sggs_sheet(idx_fn)
   all_cols <- names(df)
-  # _idx로 끝나는 컬럼만 추출하여 섹터의 기준 순서(Base)를 잡음
+
+  # 1) 섹터 base는 _idx로만 정의
   idx_cols <- grep("_idx$", all_cols, value = TRUE)
-  
-  # [검증] 랭크 개수와 섹터 개수 일치 확인
-  if(length(idx_cols) != length(sector_rank)) {
-    warning(paste("SKIP Reorder: Sector count mismatch. Sheet:", length(idx_cols), "Rank:", length(sector_rank)))
+  bases <- sub("_idx$", "", idx_cols)
+
+  # 중복 base 방지
+  if (any(duplicated(bases))) {
+    stop("Duplicate sector bases detected from _idx columns: ",
+         paste(unique(bases[duplicated(bases)]), collapse = ", "))
+  }
+
+  # 2) rank 길이 검증
+  if (length(bases) != length(sector_rank)) {
+    warning(paste("SKIP Reorder: Sector count mismatch. Sheet:", length(bases),
+                  "Rank:", length(sector_rank)))
     return(NULL)
   }
-  
-  # 3. 현재 시트에 있는 섹터 이름들 추출 (예: "IT_idx" -> "IT")
-  # 순서는 현재 시트의 컬럼 순서를 따름
-  current_base_names <- sub("_idx$", "", idx_cols)
-  
-  # 4. 랭크 적용하여 새로운 섹터 순서 결정
-  # sector_rank가 [3, 1, 2]라면, 3번째 섹터가 맨 앞으로 옴
-  ordered_base_names <- current_base_names[sector_rank]
-  
-  # 5. 전체 컬럼 재배열 리스트 생성
-  # _idx, _wt 뿐만 아니라 _ref 등 해당 섹터 접두어를 가진 모든 컬럼을 한 뭉치로 이동
-  new_col_order <- c()
-  for(base in ordered_base_names) {
-    # 해당 섹터 이름으로 시작하는 모든 컬럼 찾기 (예: IT_idx, IT_wt, IT_ref...)
-    # ^Base_ 패턴 사용으로 정확도 향상
-    pattern <- paste0("^", base, "_")
-    related_cols <- grep(pattern, all_cols, value = TRUE)
-    new_col_order <- c(new_col_order, related_cols)
+
+  # 3) 모든 base에 대해 _wt가 존재하는지 강제 검증 (항상 pair라 했으니)
+  need_wt <- paste0(bases, "_wt")
+  missing_wt <- need_wt[!need_wt %in% all_cols]
+  if (length(missing_wt) > 0) {
+    stop("Missing paired _wt columns: ", paste(missing_wt, collapse = ", "))
   }
-  
-  # 6. 데이터프레임 재정렬
-  df_sorted <- df %>% select(all_of(new_col_order))
-  
-  # 7. 시트에 쓰기
-  # 기존 데이터 영역을 완전히 덮어쓰도록 A1부터 기록
-  # NA는 빈 셀로 기록되어 이전 데이터 잔여물을 지움
-  write_sggs_sheet(df_sorted,idx_fn,'A1')
-  
-  message(paste0("Success: Reordered '", idx_fn, "' columns based on rank."))
+
+  # (선택) 현재 시트에서 idx 바로 다음이 wt인지 확인(깨져 있으면 경고)
+  pos_idx <- match(paste0(bases, "_idx"), all_cols)
+  pos_wt  <- match(paste0(bases, "_wt"),  all_cols)
+  not_adj <- bases[which(pos_wt != pos_idx + 1)]
+  if (length(not_adj) > 0) {
+    warning("Some idx/wt pairs are not adjacent in the current sheet: ",
+            paste(not_adj, collapse = ", "),
+            " (will still reorder as idx->wt pairs)")
+  }
+
+  # 4) rank로 섹터 순서 결정
+  ordered_bases <- bases[sector_rank]
+
+  # 5) 핵심: base_idx, base_wt를 항상 2개씩 붙여서 순서 생성
+  sector_order <- as.vector(rbind(
+    paste0(ordered_bases, "_idx"),
+    paste0(ordered_bases, "_wt")
+  ))
+
+  # 6) 섹터 컬럼 외 컬럼이 있으면 유지(원본 순서 그대로 앞에 둠)
+  sector_set <- as.vector(rbind(paste0(bases, "_idx"), paste0(bases, "_wt")))
+  other_cols <- all_cols[!all_cols %in% sector_set]
+
+  final_order <- c(other_cols, sector_order)
+
+  # 7) 재정렬 + 쓰기
+  df_sorted <- df %>% dplyr::select(dplyr::any_of(final_order))
+  write_sggs_sheet(df_sorted, idx_fn, "A1")
+
+  message(paste0("Success: Reordered '", idx_fn, "' with strict idx/wt pairing."))
 }
 
 
