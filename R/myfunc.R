@@ -984,7 +984,7 @@ usky_lfcy2 <- function(ref_date,th_date){
   #cal ema for idx
   prun_idx_sort_ema5 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=5))
   prun_idx_sort_ema20 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=20))
-  prun_idx_sort_ema50 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=50))
+  #prun_idx_sort_ema50 <- apply(prices_run_idx_sort,2, function(x) EMA(x,n=50))
   
   diffn_df5 <- ((prices_run_idx_sort-prun_idx_sort_ema5)/prun_idx_sort_ema5)*100
   diffn_df20 <- ((prices_run_idx_sort-prun_idx_sort_ema20)/prun_idx_sort_ema5)*100
@@ -996,7 +996,7 @@ usky_lfcy2 <- function(ref_date,th_date){
   #cal ema for th
   prun_th_sort_ema5 <- apply(prices_run_th_sort,2, function(x) EMA(x,n=5))
   prun_th_sort_ema20 <- apply(prices_run_th_sort,2, function(x) EMA(x,n=20))
-  prun_th_sort_ema50 <- apply(prices_run_th_sort,2, function(x) EMA(x,n=50))
+  #prun_th_sort_ema50 <- apply(prices_run_th_sort,2, function(x) EMA(x,n=50))
   
   diffn_df_th5 <- ((prices_run_th_sort-prun_th_sort_ema5)/prun_th_sort_ema5)*100
   diffn_df_th20 <- ((prices_run_th_sort-prun_th_sort_ema20)/prun_th_sort_ema5)*100
