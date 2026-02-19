@@ -1657,6 +1657,7 @@ cal_5m_idx_rest<- function(){
   assign('tgt_name_sort',tgt_name_sort,envir=.GlobalEnv)
   save.image(file=paste0(wd_str,"vmonGlobal.RData"))
 
+  return(tgt_name_sort)
 
 }
 
