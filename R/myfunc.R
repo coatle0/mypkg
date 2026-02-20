@@ -1146,7 +1146,7 @@ update_kidx <- function(ref_date,sheet_num,idx_fn,start_date){
   gs4_auth(email = "coatle0@gmail.com")
   ssid <- "1Edz1EPV6hqBM2tMKSkA3zNmysmugMrAg1u2H3fheXaM"
   range_clear(ssid,sheet=sheet_num)
-  range_write(ssid,prices_run.df,range="A1",col_names = TRUE,sheet = sheet_num)
+  range_write(ssid,tail(prices_run.df,n=200),range="A1",col_names = TRUE,sheet = sheet_num)
 
 #  if(sheet_num== 'kidx-Q'){
 #    range_write(ssid,top_sub60_prices_run.df,range="Z1",col_names = TRUE,sheet = sheet_num)
