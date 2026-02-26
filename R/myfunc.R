@@ -1208,7 +1208,7 @@ update_ksep <- function(ref_date,sheet_num,idx_fn,start_date,sector_rank){
 }
 
 
-update_myidx <- function(kidx_start,data_start,qtr_start,week_start){
+update_myidx <- function(kidx_start,data_start,qtr_start,week_start,reversal_start){
   #read index ticker and weight list
   # update yearly idx
   sheet_num = 'kidx-Q'
@@ -1224,6 +1224,13 @@ update_myidx <- function(kidx_start,data_start,qtr_start,week_start){
   idx_fn = "kr_idx"
   sector_rank<-update_kidx(ref_date,sheet_num,idx_fn,data_start)
 
+  #update reversal idx
+  sheet_num = 'kidx-exe'
+  ref_date = reversal_start
+  start_date = data_start
+  idx_fn = "kr_idx"
+  exe_rank<-update_kidx(ref_date,sheet_num,idx_fn,data_start)
+
     #update auto parts weekly
   sheet_num = 'sub_sector'
   start_date <- data_start
@@ -1233,6 +1240,10 @@ update_myidx <- function(kidx_start,data_start,qtr_start,week_start){
 
   #reorder kr_idx based on sector_rank calculation
   reorder_gs_sheet('kr_idx',sector_rank)
+
+   #reorder kr_idx_exe based on sector_rank calculation
+  reorder_gs_sheet('kr_idx_exe',exe_rank)
+
 
 
   #update zg quarterly idx
