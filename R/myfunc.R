@@ -1224,6 +1224,9 @@ update_myidx <- function(kidx_start,data_start,qtr_start,week_start,reversal_sta
   idx_fn = "kr_idx"
   sector_rank<-update_kidx(ref_date,sheet_num,idx_fn,data_start)
 
+  #reorder kr_idx based on sector_rank calculation
+  reorder_gs_sheet('kr_idx',sector_rank)
+
   #update reversal idx
   sheet_num = 'kidx-exe'
   ref_date = reversal_start
@@ -1238,8 +1241,7 @@ update_myidx <- function(kidx_start,data_start,qtr_start,week_start,reversal_sta
   idx_fn = "kr_idx"
   update_ksep(ref_date,sheet_num,idx_fn,data_start,sector_rank)
 
-  #reorder kr_idx based on sector_rank calculation
-  reorder_gs_sheet('kr_idx',sector_rank)
+
 
    #reorder kr_idx_exe based on sector_rank calculation
   reorder_gs_sheet('kr_idx_exe',exe_rank)
