@@ -1226,6 +1226,7 @@ update_myidx <- function(kidx_start,data_start,qtr_start,week_start,reversal_sta
 
   #reorder kr_idx based on sector_rank calculation
   reorder_gs_sheet('kr_idx',sector_rank)
+  print("set up new kr_idx")
 
   #update reversal idx
   sheet_num = 'kidx-exe'
@@ -1523,7 +1524,7 @@ wd_str<-paste0("C:/",wd,"/")
 resume_env(wd)  
 load(paste0(wd_str,"vmonGlobal.RData"))
 
-volmon<-read_csv(paste0(wd_str,"volmon.csv"),locale=locale('ko',encoding='cp949'))
+volmon<-read_csv(paste0(wd_str,"volmon_s101_v2.csv"),locale=locale('ko',encoding='cp949'))
 jm_lst<-t(volmon[,2])
 time_lst <- volmon$time
 time_lst <- substr(time_lst,1,4)
