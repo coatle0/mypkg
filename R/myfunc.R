@@ -1506,6 +1506,73 @@ init_volmon<-function(wd){
 }
 
 
+init_volmon2<-function(wd){
+  vmonenv <- new.env()
+  diff_env <- new.env()
+  nor_vol_env <- new.env()
+  
+  wd_str<-paste0("C:/",wd,"/")
+  
+  assign("wd_str",wd_str,envir=.GlobalEnv)
+  
+  today_str <- Sys.Date()
+  assign('today_str',today_str,envir=.GlobalEnv)
+  
+  code<-code_get()
+  assign('code',code,envir=.GlobalEnv)
+  
+  time_index <- as.POSIXct(character())
+  empty_xts <- xts(matrix(ncol = 5, nrow = 0), order.by = time_index)
+  
+  # 컬럼 이름 지정
+  colnames(empty_xts) <- c('open','high','low','close','volume')
+  
+  
+  volmon <- read_csv('c:/lab/s110_comprehensive_core.csv',locale=locale('ko',encoding='cp949'))
+  
+  jm_lst<-substr(volmon$jm,2,7)
+  assign('jm_lst',jm_lst,envir=.GlobalEnv)
+  
+  idx_gs_lst <- read_gs_idx('kr_idx_exe2')
+  kweight_lst<-idx_gs_lst[[2]]
+  ksmb_lst<-idx_gs_lst[[1]]
+  assign('ksmb_lst',ksmb_lst,envir=.GlobalEnv)
+  assign('kweight_lst',kweight_lst,envir=.GlobalEnv)
+  
+  
+  
+  jmnm_lst<-lapply(jm_lst,function(x) code$name[match(x,code$scode)])
+  jmnm_lst <- unlist(jmnm_lst)
+  assign('jmnm_lst',jmnm_lst,envir=.GlobalEnv)
+  
+  init_envir<-lapply(jmnm_lst,function(x) assign(x,empty_xts,envir=vmonenv))
+
+  #load vsd file
+  # vsdfm_lst<-lapply(ksmb_lst,function(x){
+  #   dut<-read.csv(paste0(wd_str,'/tm_study/',x,'_vsdfm.csv'));
+  #   dt<-paste0(today_str,' ',dut$idx)
+  #   dt<-as.POSIXct(dt,format="%Y-%m-%d %H:%M");
+  #   #print(y)
+  #   dut_x <- xts(dut[,c('mean','sd3')],dt);
+  #   assign(paste0(code[match(substr(x,2,7),code$code),2]$name,"_vsdfm"),dut_x,envir=vmonenv)
+  # }
+  
+  assign('vmonenv',vmonenv,envir=.GlobalEnv)
+  assign('diff_env',diff_env,envir=.GlobalEnv)
+  assign('nor_vol_env',nor_vol_env,envir=.GlobalEnv)
+
+  #initialize tgt_name_sort and assign as global variable
+  tgt_name_sort <- data.frame()
+  assign('tgt_name_sort',tgt_name_sort,envir=.GlobalEnv)
+
+
+  save.image(file=paste0(wd_str,"vmonGlobal2.RData"))
+  #saveRDS(vmonenv,file=paste0(wd_str,"vmonenv.RData"))
+  #saveRDS(diff_env,file=paste0(wd_str,"diff_env.RData"))
+  #saveRDS(nor_vol_env,file=paste0(wd_str,"nor_vol_env.RData"))
+  
+}
+
 resume_env<-function(wd){
   wd_str<-paste0("C:/",wd,"/")
   load(paste0(wd_str,"vmonGlobal.RData"),envir=.GlobalEnv)
@@ -1553,6 +1620,44 @@ print('volmon update completed')
 save.image(file=paste0(wd_str,"vmonGlobal.RData"))
 
 }
+
+
+update_volmon2<-function(wd){
+
+wd_str<-paste0("C:/",wd,"/")
+resume_env(wd)  
+load(paste0(wd_str,"vmonGlobal2.RData"))
+
+volmon<-read_csv(paste0(wd_str,"volmon_s110_comprehensive_core.csv"),locale=locale('ko',encoding='cp949'))
+jm_lst<-t(volmon[,2])
+time_lst <- volmon$time
+time_lst <- substr(time_lst,1,4)
+time_unq <- unique(time_lst)[1]
+print(time_unq)
+#time_stamp <- paste0(substr(time_unq,1,3),ifelse(as.numeric(substr(time_unq,4,4))>5,'5','0'))
+time_stamp <- time_unq
+#print(time_stamp)
+#data frame to list
+volmon_lst<-split(volmon,row(volmon)[,2])
+
+#input volmon
+volmon_xts_lst<-lapply(as.list(time_stamp),function(x) { mapply(function(X,Y){dt<-paste0(today_str,' ',Y);
+dt<-as.POSIXct(dt,format="%Y-%m-%d %H%M");
+x_xts<-xts(X[,c('open','high','low','close','volume')],dt);
+tgt_dut<-get(X$code_name,envir=vmonenv);
+x_xts_up<-rbind(tgt_dut,x_xts);
+assign(X$code_name,x_xts_up,envir=vmonenv)
+temp<-Y
+},X=volmon_lst,Y=x);
+}
+)
+assign('vmonenv',vmonenv,envir=.GlobalEnv)
+print('volmon update completed')
+
+save.image(file=paste0(wd_str,"vmonGlobal2.RData"))
+
+}
+
 
 cal_5m_idx<- function(){
   ref_prices=lapply(ksmb_lst,function(x) do.call(cbind,lapply(
