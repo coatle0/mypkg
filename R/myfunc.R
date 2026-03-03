@@ -1460,7 +1460,7 @@ init_volmon<-function(wd){
   colnames(empty_xts) <- c('open','high','low','close','volume')
   
   
-  volmon <- read_csv('c:/lab/volmon_s101_v2.csv',locale=locale('ko',encoding='cp949'))
+  volmon <- read_csv('c:/lab/s101_v2.csv',locale=locale('ko',encoding='cp949'))
   
   jm_lst<-substr(volmon$jm,2,7)
   assign('jm_lst',jm_lst,envir=.GlobalEnv)
