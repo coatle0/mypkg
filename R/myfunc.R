@@ -1586,6 +1586,18 @@ resume_env<-function(wd){
   #assign('nor_vol_env',nor_vol_env,envir=.GlobalEnv)
 }
 
+resume_env2<-function(wd){
+  wd_str<-paste0("C:/",wd,"/")
+  load(paste0(wd_str,"vmonGlobal2.RData"),envir=.GlobalEnv)
+  #vmonenv<-readRDS("vmonenv.RData")
+  #diff_env<-readRDS("diff_env.RData")
+  #nor_vol_env<-readRDS("nor_vol_env.RData")
+
+  #assign('vmonenv',vmonenv,envir=.GlobalEnv)
+  #assign('diff_env',diff_env,envir=.GlobalEnv)
+  #assign('nor_vol_env',nor_vol_env,envir=.GlobalEnv)
+}
+
 update_volmon<-function(wd){
 
 wd_str<-paste0("C:/",wd,"/")
@@ -1626,7 +1638,7 @@ save.image(file=paste0(wd_str,"vmonGlobal.RData"))
 update_volmon2<-function(wd){
 print(" running update_volmon2")
 wd_str<-paste0("C:/",wd,"/")
-resume_env(wd)  
+resume_env2(wd)  
 load(paste0(wd_str,"vmonGlobal2.RData"))
 
 volmon<-read_csv(paste0(wd_str,"volmon_s110_comprehensive_core.csv"),locale=locale('ko',encoding='cp949'))
