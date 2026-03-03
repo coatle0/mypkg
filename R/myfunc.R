@@ -1465,7 +1465,7 @@ init_volmon<-function(wd){
   jm_lst<-substr(volmon$jm,2,7)
   assign('jm_lst',jm_lst,envir=.GlobalEnv)
   
-  idx_gs_lst <- read_gs_idx('kr_idx')
+  idx_gs_lst <- read_gs_idx('kr_idx_exe')
   kweight_lst<-idx_gs_lst[[2]]
   ksmb_lst<-idx_gs_lst[[1]]
   assign('ksmb_lst',ksmb_lst,envir=.GlobalEnv)
