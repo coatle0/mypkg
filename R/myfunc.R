@@ -1507,6 +1507,7 @@ init_volmon<-function(wd){
 
 
 init_volmon2<-function(wd){
+  print("init_volmon2")
   vmonenv <- new.env()
   diff_env <- new.env()
   nor_vol_env <- new.env()
@@ -1623,7 +1624,7 @@ save.image(file=paste0(wd_str,"vmonGlobal.RData"))
 
 
 update_volmon2<-function(wd){
-
+print(" running update_volmon2")
 wd_str<-paste0("C:/",wd,"/")
 resume_env(wd)  
 load(paste0(wd_str,"vmonGlobal2.RData"))
