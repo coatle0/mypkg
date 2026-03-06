@@ -1776,12 +1776,12 @@ cal_5m_idx_rest<- function(){
   second_tokens <- sapply(tstamp, function(x) x[2])
 
   prices_run.df<-data.frame(time=second_tokens,prices_run_idx_sort_df)
-  #write_rtgs_sheet(prices_run.df,'fm_rt_sep_rest','A1')
+  write_rtgs_sheet(prices_run.df,'fm_rt_sep_rest','A1')
 
   #assign tgt_name dataframe
   tgt_name_sort_update<-data.frame(time=tail(prices_run.df$time,n=1),t(colnames(prices_run.df)[2:dim(prices_run.df)[2]]))
   tgt_name_sort <- rbind(tgt_name_sort,tgt_name_sort_update)
-  #write_rtgs_sheet(tgt_name_sort,'fm_rt_name_rest','A1')
+  write_rtgs_sheet(tgt_name_sort,'fm_rt_name_rest','A1')
 
   #write.csv(tgt_name_sort, file = paste0('rt_name',today_str,".csv"),row.names=FALSE)
 
