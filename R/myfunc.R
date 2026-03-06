@@ -1794,6 +1794,67 @@ cal_5m_idx_rest<- function(){
 }
 
 
+cal_5m_idx_rest2<- function(){
+  ref_prices=lapply(ksmb_lst,function(x) do.call(cbind,lapply(
+    x,function(x) coredata(Cl(get(x,envir=vmonenv)[1]))))%>%`colnames<-`(x))
+  
+  prices_run_ft<-lapply(ksmb_lst,function(x){do.call(merge,lapply(x,
+                                                                  function(y){Cl(get(y,envir=vmonenv))}))}%>%`colnames<-`(x))
+  
+  ref_pf = mapply(function(X,Y){X/Y}, X=kweight_lst,Y=ref_prices,SIMPLIFY = FALSE)
+  
+  
+  prices_run.idx = mapply(function(X,Y){X %*% as.numeric(Y)},X=prices_run_ft,
+                          Y=ref_pf,SIMPLIFY = FALSE)
+  
+  prices_run.xts = mapply(function(X,Y){ xts(X,index(Y))},X=prices_run.idx,
+                          Y=prices_run_ft,SIMPLIFY = FALSE)
+  idx_sort <- order(sapply(prices_run.xts,function(x) sum(tail(x[,1]))),decreasing=TRUE)
+  
+  prices_run_sort.xts<-prices_run.xts[idx_sort]
+  ksmb_lst_sort<-ksmb_lst[idx_sort]
+  assign('ksmb_lst_sort',ksmb_lst_sort,envir=.GlobalEnv)
+
+  idx_all.xts <- do.call(merge,prices_run_sort.xts[1:8])
+  tstamp <- strsplit(as.character(index(idx_all.xts)), " ")
+  second_tokens <- sapply(tstamp, function(x) x[2])
+
+  idx_all.df <- data.frame(time=second_tokens,coredata(idx_all.xts))
+  write_rtgs_sheet(idx_all.df,'fm_rt_rest','A1')
+  #process sep chart
+
+  ref_prices=lapply(ksmb_lst_sort[1:9],function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir=vmonenv)))[1])))
+  prices_run=lapply(ksmb_lst_sort[1:9], function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir = vmonenv))))))
+  prices_run_normal = mapply(function(X,Y,Z){as.data.frame(sweep(X,2,Y,FUN="/")*100) %>% set_names(Z)},X=prices_run,Y=ref_prices,Z=ksmb_lst_sort[1:9])
+  prices_run_idx_sort <-lapply(prices_run_normal, function(x) x[,order(colSums(tail(x,n=1)),decreasing=T)[1:3]])
+  
+  prices_run_idx_sort_df<-as.data.frame(prices_run_idx_sort)
+  tgt_colnames <- strsplit(colnames(prices_run_idx_sort_df), split = "\\.")
+  tgt_colnames <-lapply(tgt_colnames, function(x) return(x[2]))
+  colnames(prices_run_idx_sort_df) <-   tgt_colnames
+  idx_all.xts <- do.call(merge,prices_run_sort.xts[1:8])
+  
+  tstamp <- strsplit(as.character(index(get(ksmb_lst[[1]][1],envir=vmonenv))), " ")
+  second_tokens <- sapply(tstamp, function(x) x[2])
+
+  prices_run.df<-data.frame(time=second_tokens,prices_run_idx_sort_df)
+  write_rtgs_sheet(prices_run.df,'fm_rt_sep_rest','A1')
+
+  #assign tgt_name dataframe
+  tgt_name_sort_update<-data.frame(time=tail(prices_run.df$time,n=1),t(colnames(prices_run.df)[2:dim(prices_run.df)[2]]))
+  tgt_name_sort <- rbind(tgt_name_sort,tgt_name_sort_update)
+  write_rtgs_sheet(tgt_name_sort,'fm_rt_name_rest','A1')
+
+  #write.csv(tgt_name_sort, file = paste0('rt_name',today_str,".csv"),row.names=FALSE)
+
+
+  assign('tgt_name_sort',tgt_name_sort,envir=.GlobalEnv)
+  save.image(file=paste0(wd_str,"vmonGlobal2.RData"))
+
+  return(tgt_name_sort)
+
+}
+
 
 
 volmon_vol_diff <- function(){lapply(volmon$code_name,function(x){
