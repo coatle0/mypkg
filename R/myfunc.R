@@ -1758,7 +1758,7 @@ cal_5m_idx_rest<- function(){
   second_tokens <- sapply(tstamp, function(x) x[2])
 
   idx_all.df <- data.frame(time=second_tokens,coredata(idx_all.xts))
-  write_rtgs_sheet(idx_all.df,'fm_rt_rest','A1')
+  write_rtgs_sheet(idx_all.df,'fm_rt_101','A1')
   #process sep chart
 
   ref_prices=lapply(ksmb_lst_sort[1:9],function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir=vmonenv)))[1])))
@@ -1776,14 +1776,14 @@ cal_5m_idx_rest<- function(){
   second_tokens <- sapply(tstamp, function(x) x[2])
 
   prices_run.df<-data.frame(time=second_tokens,prices_run_idx_sort_df)
-  write_rtgs_sheet(prices_run.df,'fm_rt_sep_rest','A1')
+  write_rtgs_sheet(prices_run.df,'fm_rt_sep_s101','A1')
 
   #assign tgt_name dataframe
   tgt_name_sort_update<-data.frame(time=tail(prices_run.df$time,n=1),t(colnames(prices_run.df)[2:dim(prices_run.df)[2]]))
   tgt_name_sort <- rbind(tgt_name_sort,tgt_name_sort_update)
-  write_rtgs_sheet(tgt_name_sort,'fm_rt_name_rest','A1')
+  write_rtgs_sheet(tgt_name_sort,'fm_rt_name_101','A1')
 
-  #write.csv(tgt_name_sort, file = paste0('rt_name',today_str,".csv"),row.names=FALSE)
+  write.csv(tgt_name_sort, file = paste0('rt_name_s101',today_str,".csv"),row.names=FALSE)
 
 
   assign('tgt_name_sort',tgt_name_sort,envir=.GlobalEnv)
@@ -1820,7 +1820,7 @@ cal_5m_idx_rest2<- function(){
   second_tokens <- sapply(tstamp, function(x) x[2])
 
   idx_all.df <- data.frame(time=second_tokens,coredata(idx_all.xts))
-  write_rtgs_sheet(idx_all.df,'fm_rt_rest','A1')
+  write_rtgs_sheet(idx_all.df,'fm_rt_s110','A1')
   #process sep chart
 
   ref_prices=lapply(ksmb_lst_sort[1:9],function(x) do.call(cbind,lapply(x,function(x) coredata(Cl(get(x,envir=vmonenv)))[1])))
@@ -1838,14 +1838,14 @@ cal_5m_idx_rest2<- function(){
   second_tokens <- sapply(tstamp, function(x) x[2])
 
   prices_run.df<-data.frame(time=second_tokens,prices_run_idx_sort_df)
-  write_rtgs_sheet(prices_run.df,'fm_rt_sep_rest','A1')
+  write_rtgs_sheet(prices_run.df,'fm_rt_sep_s110','A1')
 
   #assign tgt_name dataframe
   tgt_name_sort_update<-data.frame(time=tail(prices_run.df$time,n=1),t(colnames(prices_run.df)[2:dim(prices_run.df)[2]]))
   tgt_name_sort <- rbind(tgt_name_sort,tgt_name_sort_update)
-  write_rtgs_sheet(tgt_name_sort,'fm_rt_name_rest','A1')
+  write_rtgs_sheet(tgt_name_sort,'fm_rt_name_s110','A1')
 
-  #write.csv(tgt_name_sort, file = paste0('rt_name',today_str,".csv"),row.names=FALSE)
+  write.csv(tgt_name_sort, file = paste0('rt_name_S110',today_str,".csv"),row.names=FALSE)
 
 
   assign('tgt_name_sort',tgt_name_sort,envir=.GlobalEnv)
