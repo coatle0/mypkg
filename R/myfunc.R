@@ -125,8 +125,8 @@ fetch_market_bydd <- function(basDd, market,
 #function for jm_code get
 code_get <- function() {
   auth_key <- "8F3C1451B12547D3B544D148371C69E0ED63FAA6"
-  start_lag = 1
-  max_lookback = 10
+  start_lag <- 1
+  max_lookback <- 10
   markets <- c("KOSPI", "KOSDAQ", "ETF")
   
   for (i in 0:max_lookback) {
@@ -146,10 +146,11 @@ code_get <- function() {
       
       symbol_list <- raw_all %>%
         dplyr::transmute(
-          market = MARKET,
-          name   = ISU_NM,
-          code   = ISU_CD,
-          scode  = ISU_CD
+          market    = MARKET,
+          name      = ISU_NM,
+          code      = ISU_CD,
+          scode     = ISU_CD,
+          marketcap = readr::parse_number(MKTCAP)
         ) %>%
         dplyr::distinct() %>%
         dplyr::mutate(
