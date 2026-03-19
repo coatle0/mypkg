@@ -150,7 +150,8 @@ code_get <- function() {
           name      = ISU_NM,
           code      = ISU_CD,
           scode     = ISU_CD,
-          marketcap = readr::parse_number(MKTCAP)
+          marketcap = readr::parse_number(MKTCAP),
+          shares    = readr::parse_number(LIST_SHRS)
         ) %>%
         dplyr::distinct() %>%
         dplyr::mutate(
