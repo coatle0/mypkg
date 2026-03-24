@@ -708,7 +708,7 @@ ksky_lfcy2 <- function(ref_date,th_date){
                                                                               {tqk_code<-code[match(x,code$name),3]$code;yahoo_code<-paste0(tqk_code,".KQ");
                                                                               temp<-tryCatch(expr= tqk_get(tqk_code,from=start_date),
                                                                                              error = function(e) { print(paste0(x," new jm, using yahoo"));get_yahoo<-tq_get(yahoo_code, get = "stock.prices", from = start_date);return(get_yahoo[,2:7])},
-                                                                                             warning = function(e) print("Warning") );
+                                                                                             warning = function(w) { print(paste0(x," warning, using yahoo"));get_yahoo<-tq_get(yahoo_code, get = "stock.prices", from = start_date);return(get_yahoo[,2:7])}  );
                                                                               assign(x,xts(temp[,2:6],temp$date),envir=ktickerData)},print(paste0(x,"exitsts")))})})
   
   
@@ -1106,7 +1106,7 @@ update_kidx <- function(ref_date,sheet_num,idx_fn,start_date){
                                                                               {tqk_code<-code[match(x,code$name),3]$code;yahoo_code<-paste0(tqk_code,".KQ");
                                                                               temp<-tryCatch(expr= tqk_get(tqk_code,from=start_date),
                                                                                              error = function(e) { print(paste0(x," new jm, using yahoo"));get_yahoo<-tq_get(yahoo_code, get = "stock.prices", from = start_date);return(get_yahoo[,2:7])},
-                                                                                             warning = function(e) print("Warning") );
+                                                                                             warning = function(w) { print(paste0(x," warning, using yahoo"));get_yahoo<-tq_get(yahoo_code, get = "stock.prices", from = start_date);return(get_yahoo[,2:7])}  );
                                                                               assign(x,xts(temp[,2:6],temp$date),envir=ktickerData)},print(paste0(x,"exitsts")))})})
 
 
@@ -1177,7 +1177,7 @@ update_ksep <- function(ref_date,sheet_num,idx_fn,start_date,sector_rank){
                                                                               {tqk_code<-code[match(x,code$name),3]$code;yahoo_code<-paste0(tqk_code,".KQ");
                                                                               temp<-tryCatch(expr= tqk_get(tqk_code,from=start_date),
                                                                                              error = function(e) { print(paste0(x," new jm, using yahoo"));get_yahoo<-tq_get(yahoo_code, get = "stock.prices", from = start_date);return(get_yahoo[,2:7])},
-                                                                                             warning = function(e) print("Warning") );
+                                                                                             warning = function(w) { print(paste0(x," warning, using yahoo"));get_yahoo<-tq_get(yahoo_code, get = "stock.prices", from = start_date);return(get_yahoo[,2:7])}  );
                                                                               assign(x,xts(temp[,2:6],temp$date),envir=ktickerData)},print(paste0(x,"exitsts")))})})
 
 
