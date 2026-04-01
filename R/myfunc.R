@@ -1695,7 +1695,7 @@ cal_5m_idx<- function(){
   ksmb_lst_sort<-ksmb_lst[idx_sort]
   assign('ksmb_lst_sort',ksmb_lst_sort,envir=.GlobalEnv)
 
-  idx_all.xts <- do.call(merge,prices_run_sort.xts[1:8])
+  idx_all.xts <- do.call(merge,prices_run_sort.xts)
   tstamp <- strsplit(as.character(index(idx_all.xts)), " ")
   second_tokens <- sapply(tstamp, function(x) x[2])
 
@@ -1712,7 +1712,7 @@ cal_5m_idx<- function(){
   tgt_colnames <- strsplit(colnames(prices_run_idx_sort_df), split = "\\.")
   tgt_colnames <-lapply(tgt_colnames, function(x) return(x[2]))
   colnames(prices_run_idx_sort_df) <-   tgt_colnames
-  idx_all.xts <- do.call(merge,prices_run_sort.xts[1:8])
+  idx_all.xts <- do.call(merge,prices_run_sort.xts)
   
   tstamp <- strsplit(as.character(index(get(ksmb_lst[[1]][1],envir=vmonenv))), " ")
   second_tokens <- sapply(tstamp, function(x) x[2])
@@ -1755,7 +1755,7 @@ cal_5m_idx_rest<- function(){
   ksmb_lst_sort<-ksmb_lst[idx_sort]
   assign('ksmb_lst_sort',ksmb_lst_sort,envir=.GlobalEnv)
 
-  idx_all.xts <- do.call(merge,prices_run_sort.xts[1:8])
+  idx_all.xts <- do.call(merge,prices_run_sort.xts)
   tstamp <- strsplit(as.character(index(idx_all.xts)), " ")
   second_tokens <- sapply(tstamp, function(x) x[2])
 
@@ -1772,7 +1772,7 @@ cal_5m_idx_rest<- function(){
   tgt_colnames <- strsplit(colnames(prices_run_idx_sort_df), split = "\\.")
   tgt_colnames <-lapply(tgt_colnames, function(x) return(x[2]))
   colnames(prices_run_idx_sort_df) <-   tgt_colnames
-  idx_all.xts <- do.call(merge,prices_run_sort.xts[1:8])
+  idx_all.xts <- do.call(merge,prices_run_sort.xts)
   
   tstamp <- strsplit(as.character(index(get(ksmb_lst[[1]][1],envir=vmonenv))), " ")
   second_tokens <- sapply(tstamp, function(x) x[2])
@@ -1817,7 +1817,7 @@ cal_5m_idx_rest2<- function(){
   ksmb_lst_sort<-ksmb_lst[idx_sort]
   assign('ksmb_lst_sort',ksmb_lst_sort,envir=.GlobalEnv)
 
-  idx_all.xts <- do.call(merge,prices_run_sort.xts[1:8])
+  idx_all.xts <- do.call(merge,prices_run_sort.xts)
   tstamp <- strsplit(as.character(index(idx_all.xts)), " ")
   second_tokens <- sapply(tstamp, function(x) x[2])
 
@@ -1834,7 +1834,7 @@ cal_5m_idx_rest2<- function(){
   tgt_colnames <- strsplit(colnames(prices_run_idx_sort_df), split = "\\.")
   tgt_colnames <-lapply(tgt_colnames, function(x) return(x[2]))
   colnames(prices_run_idx_sort_df) <-   tgt_colnames
-  idx_all.xts <- do.call(merge,prices_run_sort.xts[1:8])
+  idx_all.xts <- do.call(merge,prices_run_sort.xts)
   
   tstamp <- strsplit(as.character(index(get(ksmb_lst[[1]][1],envir=vmonenv))), " ")
   second_tokens <- sapply(tstamp, function(x) x[2])
