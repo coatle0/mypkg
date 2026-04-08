@@ -1762,7 +1762,7 @@ cal_5m_idx<- function(){
   ksmb_lst_sort<-ksmb_lst[idx_sort]
   assign('ksmb_lst_sort',ksmb_lst_sort,envir=.GlobalEnv)
 
-  idx_all.xts <- do.call(merge,prices_run_sort.xts)
+  idx_all.xts <- idx_all.xts[complete.cases(coredata(idx_all.xts)), ]
   tstamp <- strsplit(as.character(index(idx_all.xts)), " ")
   second_tokens <- sapply(tstamp, function(x) x[2])
 
